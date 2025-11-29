@@ -6,46 +6,263 @@
 <title>Lumina Weight | Tirzepatide & Retatrutide UK</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 <style>
-  body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; margin: 0; }
-  .hero { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 130px 0; }
-  .product-card { transition: all 0.3s; border: none; cursor: pointer; }
-  .product-card:hover { transform: translateY(-12px); box-shadow: 0 25px 50px rgba(0,0,0,0.18); }
-  .price { font-size: 2rem; font-weight: bold; color: #e91e63; }
-  .stock { font-size: 0.95rem; }
-  .out-of-stock { opacity: 0.6; pointer-events: none; }
-  .cart-icon { cursor: pointer; font-size: 1.6rem; }
-  .cart-sidebar { height: 100vh; width: 420px; position: fixed; top: 0; right: -420px; background: white; box-shadow: -8px 0 30px rgba(0,0,0,0.2); transition: 0.4s; z-index: 9999; overflow-y: auto; }
+  :root {
+    --lw-mint: #42b89f;
+    --lw-mint-soft: #e8f7f3;
+    --lw-purple: #7b5cff;
+    --lw-pink: #ff6ea9;
+    --lw-bg: #f5f7fb;
+    --lw-dark: #101828;
+  }
+
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--lw-bg);
+    margin: 0;
+    color: var(--lw-dark);
+  }
+
+  /* NAVBAR */
+  .lw-navbar {
+    backdrop-filter: blur(16px);
+    background: rgba(255,255,255,0.92) !important;
+    border-bottom: 1px solid rgba(15,23,42,0.06);
+  }
+  .lw-nav-link {
+    font-weight: 500;
+    color: #667085 !important;
+    margin-left: 1.25rem;
+  }
+  .lw-nav-link.active,
+  .lw-nav-link:hover {
+    color: var(--lw-mint) !important;
+  }
+  .lw-logo-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    background: radial-gradient(circle at 20% 0%, #9ef3d1 0, var(--lw-mint) 45%, #19736a 100%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    margin-right: 10px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+  }
+
+  .cart-icon {
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: #344054;
+  }
+
+  /* HERO */
+  .hero-wrap {
+    padding: 80px 0 40px;
+    background: radial-gradient(circle at 0 0, #e9f5ff 0, transparent 50%),
+                radial-gradient(circle at 100% 0, #e9fff7 0, transparent 50%);
+  }
+  .hero-card {
+    background: white;
+    border-radius: 32px;
+    padding: 48px 32px;
+    box-shadow: 0 20px 60px rgba(15,23,42,0.06);
+  }
+  .hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    color: #067647;
+    background: #e7f6ec;
+    margin-bottom: 14px;
+    font-weight: 600;
+  }
+  .hero-pill i {
+    font-size: 0.9rem;
+  }
+  .hero-title {
+    font-size: clamp(2.4rem, 4vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+  .hero-title span {
+    color: var(--lw-mint);
+  }
+  .hero-sub {
+    font-size: 1rem;
+    color: #667085;
+    max-width: 520px;
+  }
+  .hero-cta-main {
+    background: var(--lw-mint);
+    border: none;
+    padding-inline: 28px;
+    padding-block: 12px;
+    border-radius: 999px;
+    font-weight: 600;
+    box-shadow: 0 18px 40px rgba(2,122,72,0.35);
+  }
+  .hero-cta-main:hover {
+    background: #17937b;
+  }
+  .hero-cta-secondary {
+    border-radius: 999px;
+    font-weight: 600;
+  }
+
+  /* PRODUCT CARDS */
+  .section-title {
+    font-size: 1.9rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .section-subtitle {
+    text-align: center;
+    color: #667085;
+    margin-bottom: 30px;
+  }
+
+  .product-card {
+    transition: all 0.25s ease;
+    border-radius: 24px;
+    border: 1px solid rgba(15,23,42,0.06);
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(15,23,42,0.04);
+    cursor: pointer;
+  }
+  .product-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 50px rgba(15,23,42,0.10);
+  }
+  .product-card .card-body {
+    padding: 20px 20px 22px;
+  }
+  .product-name {
+    font-weight: 600;
+    font-size: 1.05rem;
+    margin-bottom: 4px;
+  }
+  .price {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #12b076;
+    margin-bottom: 4px;
+  }
+  .stock {
+    font-size: 0.85rem;
+  }
+  .out-of-stock {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  .badge-ribbon {
+    position: absolute;
+    top: 16px;
+    right: 18px;
+    padding: 4px 11px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+  }
+  .badge-best   { background: var(--lw-pink); }
+  .badge-popular{ background: var(--lw-mint); }
+  .badge-prem   { background: var(--lw-purple); }
+
+  .btn-product {
+    border-radius: 999px;
+    font-weight: 600;
+  }
+
+  /* CART SIDEBAR */
+  .cart-sidebar {
+    height: 100vh;
+    width: 420px;
+    position: fixed;
+    top: 0;
+    right: -420px;
+    background: #ffffff;
+    box-shadow: -8px 0 30px rgba(15,23,42,0.25);
+    transition: 0.4s;
+    z-index: 9999;
+    overflow-y: auto;
+  }
   .cart-sidebar.open { right: 0; }
-  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9998; }
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.38);
+    z-index: 9998;
+  }
   .overlay.show { display: block; }
+
   .qty-btn { width: 38px; height: 38px; }
   .qty-input { width: 60px; text-align: center; }
-  footer { background: #111; color: #ccc; }
+
+  footer {
+    background: #0b1220;
+    color: #9ca3af;
+    font-size: 0.9rem;
+  }
+
+  /* SIMPLE SECTIONS */
+  #reviews, #contact {
+    padding: 72px 0 64px;
+  }
+  .review-card {
+    background: white;
+    border-radius: 20px;
+    padding: 20px 22px;
+    box-shadow: 0 14px 40px rgba(15,23,42,0.06);
+    font-size: 0.95rem;
+  }
 </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg lw-navbar sticky-top">
   <div class="container">
-    <a class="navbar-brand fw-bold fs-3 d-flex align-items-center" href="#">
-      <img src="LuminaLogoBlack.png" alt="Lumina Weight Logo" style="height:38px; margin-right:12px;">
-      Lumina Weight
+    <a class="navbar-brand d-flex align-items-center fw-semibold" href="#home">
+      <span class="lw-logo-badge">L</span>
+      <span>Lumina Weight</span>
     </a>
-    <div class="ms-auto d-flex align-items-center text-white">
-      <div class="position-relative me-4">
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse justify-content-end" id="navMenu">
+      <ul class="navbar-nav align-items-lg-center">
+        <li class="nav-item"><a class="nav-link lw-nav-link active" href="#home">Home</a></li>
+        <li class="nav-item"><a class="nav-link lw-nav-link" href="#products">Products</a></li>
+        <li class="nav-item"><a class="nav-link lw-nav-link" href="#reviews">Reviews</a></li>
+        <li class="nav-item"><a class="nav-link lw-nav-link" href="#contact">Contact</a></li>
+      </ul>
+      <div class="ms-lg-4 mt-3 mt-lg-0 position-relative">
         <i class="fas fa-shopping-cart cart-icon" onclick="toggleCart()"></i>
         <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
       </div>
     </div>
   </div>
 </nav>
+
 <div class="overlay" onclick="toggleCart()"></div>
 
 <!-- Cart Sidebar -->
 <div class="cart-sidebar" id="cart-sidebar">
-  <div class="p-4 border-bottom bg-light d-flex justify-content-between">
-    <h4 class="mb-0">Your Cart (<span id="cart-items-count">0</span>)</h4>
+  <div class="p-4 border-bottom bg-light d-flex justify-content-between align-items-center">
+    <h5 class="mb-0 fw-semibold">Your Cart (<span id="cart-items-count">0</span>)</h5>
     <button class="btn-close" onclick="toggleCart()"></button>
   </div>
   <div id="cart-items" class="p-4" style="min-height: 60vh;">
@@ -57,16 +274,60 @@
       <strong id="cart-total">£0.00</strong>
     </div>
     <button class="btn btn-success w-100 btn-lg" onclick="goToCheckout()">Proceed to Checkout</button>
-    <small class="text-muted d-block mt-2 text-center">Enter address → get bank details</small>
+    <small class="text-muted d-block mt-2 text-center">Enter address → receive bank details</small>
   </div>
 </div>
 
-<!-- Hero -->
-<section class="hero text-center">
+<!-- HERO -->
+<section id="home" class="hero-wrap">
   <div class="container">
-    <h1 class="display-3 fw-bold">Lumina Weight</h1>
-    <p class="lead fs-3">Premium Tirzepatide & Retatrutide – Up to 30% Weight Loss</p>
-    <a href="#products" class="btn btn-warning btn-lg mt-4 px-5">Shop Now</a>
+    <div class="row justify-content-center">
+      <div class="col-lg-9">
+        <div class="hero-card text-center text-lg-start">
+          <span class="hero-pill">
+            <i class="fa-solid fa-sparkles"></i>
+            Clinically Proven Results
+          </span>
+          <div class="row align-items-center mt-2">
+            <div class="col-lg-7">
+              <h1 class="hero-title mb-3">
+                Your Weight Loss <span>Journey</span><br>Starts Here
+              </h1>
+              <p class="hero-sub mb-4">
+                Discover our range of clinically-backed weight loss solutions. From Semaglutide to Tirzepatide and Retatrutide, find the perfect fit for your goals.
+              </p>
+              <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start">
+                <a href="#products" class="btn btn-success hero-cta-main">
+                  Shop Treatments
+                </a>
+                <a href="#contact" class="btn btn-outline-secondary hero-cta-secondary">
+                  Ask a Question
+                </a>
+              </div>
+            </div>
+            <div class="col-lg-5 mt-4 mt-lg-0">
+              <!-- Simple stats block -->
+              <div class="p-4 rounded-4" style="background: var(--lw-mint-soft);">
+                <h6 class="text-uppercase text-muted mb-3" style="letter-spacing:.08em;font-size:.75rem;">Why Lumina Weight</h6>
+                <div class="d-flex justify-content-between mb-2">
+                  <span class="fw-semibold">Semaglutide</span>
+                  <span class="text-success fw-bold">~15% loss</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                  <span class="fw-semibold">Tirzepatide</span>
+                  <span class="text-success fw-bold">~20% loss</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                  <span class="fw-semibold">Retatrutide</span>
+                  <span class="text-success fw-bold">~25% loss*</span>
+                </div>
+                <small class="d-block mt-3 text-muted">*Based on early clinical data. Individual results may vary.</small>
+              </div>
+            </div>
+          </div>
+        </div> <!-- hero-card -->
+      </div>
+    </div>
   </div>
 </section>
 
@@ -79,7 +340,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body text-center">
-        <img id="modalImg" src="" class="img-fluid mb-4" style="max-height: 500px;">
+        <img id="modalImg" src="" class="img-fluid mb-4" style="max-height: 420px;">
         <h3 id="modalName"></h3>
         <p class="price fs-1" id="modalPrice"></p>
         <p class="stock text-success mb-3" id="modalStock"></p>
@@ -88,48 +349,105 @@
           <input type="number" id="modalQty" value="1" min="1" class="form-control qty-input">
           <button class="btn btn-outline-secondary qty-btn" onclick="changeQty(1)">+</button>
         </div>
-        <button id="modalAddBtn" class="btn btn-primary btn-lg px-5">Add to Cart</button>
+        <button id="modalAddBtn" class="btn btn-success btn-lg px-5 btn-product">Add to Cart</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Products -->
-<section id="products" class="py-5 bg-white">
+<!-- PRODUCTS -->
+<section id="products" class="py-5">
   <div class="container">
-    <h2 class="text-center mb-5 display-5">Our Products</h2>
-    <div class="row g-5" id="product-list"></div>
+    <h2 class="section-title">Our Treatments</h2>
+    <p class="section-subtitle">
+      Choose from our range of GLP-1 and triple-agonist options, with UK-shipped vials and flexible dosing.
+    </p>
+    <div class="row g-4" id="product-list"></div>
   </div>
 </section>
 
-<footer class="py-5 text-center bg-dark text-white">
-  <div class="container"><p class="mb-0"> 2025 Lumina Weight  • Premium Weight Loss Peptides</p></div>
+<!-- REVIEWS (simple placeholder) -->
+<section id="reviews">
+  <div class="container">
+    <h2 class="section-title">Client Stories</h2>
+    <p class="section-subtitle">Real people, real progress. A few highlights from early Lumina clients.</p>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="review-card">
+          <strong>“Down 2 stone already”</strong>
+          <p class="mt-2 mb-1">Tirzepatide helped me control cravings for the first time in years. The weekly check-ins made all the difference.</p>
+          <small class="text-muted">— J., Nottingham</small>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="review-card">
+          <strong>“Steady, sustainable loss”</strong>
+          <p class="mt-2 mb-1">I’ve tried every diet going. On Lumina’s protocol I’m losing 1–2 lb a week without feeling starved.</p>
+          <small class="text-muted">— S., Manchester</small>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="review-card">
+          <strong>“Best appetite control”</strong>
+          <p class="mt-2 mb-1">Retatrutide has been the smoothest for me – strong suppression but minimal nausea.</p>
+          <small class="text-muted">— D., Birmingham</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="container">
+    <h2 class="section-title">Contact</h2>
+    <p class="section-subtitle">Have a question about dosing, shipping or suitability? Drop your details below.</p>
+    <div class="row justify-content-center">
+      <div class="col-md-7">
+        <form class="bg-white rounded-4 p-4 shadow-sm">
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" placeholder="Your name">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" placeholder="you@example.com">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Message</label>
+            <textarea class="form-control" rows="4" placeholder="How can we help?"></textarea>
+          </div>
+          <button type="button" class="btn btn-success hero-cta-main">Send Message</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="py-4 text-center">
+  <div class="container">
+    <p class="mb-0">© 2025 Lumina Weight • Premium Weight Loss Peptides</p>
+  </div>
 </footer>
 
 <script>
-// EDIT STOCK HERE
+/* PRODUCT DATA */
 const products = [
-  {img:"10mg Tirz Vial.png", name:"Tirzepatide 10mg", price:70, stock:15},
-  {img:"20mg Tirz Vial.png", name:"Tirzepatide 20mg", price:90, stock:22},
+  {img:"10mg Tirz Vial.png", name:"Tirzepatide 10mg", price:70, stock:15, badge:"best"},
+  {img:"20mg Tirz Vial.png", name:"Tirzepatide 20mg", price:90, stock:22, badge:"popular"},
   {img:"40mg Tirz Vial.png", name:"Tirzepatide 40mg", price:120, stock:8},
   {img:"60mg Tirz Vial.png", name:"Tirzepatide 60mg", price:150, stock:3},
   {img:"20mg Reta Vial.png", name:"Retatrutide 20mg", price:130, stock:19},
-  {img:"40mg Reta Vial.png", name:"Retatrutide 40mg", price:150, stock:11},
+  {img:"40mg Reta Vial.png", name:"Retatrutide 40mg", price:150, stock:11, badge:"prem"},
   {img:"60mg Reta Vial.png", name:"Retatrutide 60mg", price:170, stock:5}
 ];
 
-// ----- BEGIN CART PERSISTENCE -----
-// load cart from localStorage
+/* CART PERSISTENCE */
 let cart = [];
 const savedCart = localStorage.getItem('cart');
 if (savedCart) {
-  try {
-    cart = JSON.parse(savedCart);
-  } catch(e) {
-    cart = [];
-  }
+  try { cart = JSON.parse(savedCart); } catch(e) { cart = []; }
 }
-
 let currentProduct = null;
 
 function saveCart() {
@@ -137,22 +455,32 @@ function saveCart() {
 }
 
 function renderProducts() {
-  document.getElementById('product-list').innerHTML = products.map((p, i) => `
+  document.getElementById('product-list').innerHTML = products.map((p, i) => {
+    let badgeHtml = "";
+    if (p.badge === "best")     badgeHtml = '<span class="badge-ribbon badge-best">Best Value</span>';
+    if (p.badge === "popular")  badgeHtml = '<span class="badge-ribbon badge-popular">Most Popular</span>';
+    if (p.badge === "prem")     badgeHtml = '<span class="badge-ribbon badge-prem">Premium</span>';
+
+    return `
     <div class="col-md-4">
-      <div class="card product-card h-100 shadow ${p.stock===0?'out-of-stock':''}" onclick="${p.stock>0?'openModal('+i+')':''}">
-        <img src="${p.img}" class="card-img-top p-4" style="height:380px; object-fit:contain;">
-        <div class="card-body text-center d-flex flex-column">
-          <h5>${p.name}</h5>
-          <p class="price">£${p.price}</p>
-          <p class="stock ${p.stock<=5?'text-danger':'text-success'}">${p.stock>0?`Only ${p.stock} left`:'<strong>Out of Stock</strong>'}</p>
-          <button class="btn ${p.stock>0?'btn-primary':'btn-secondary'} mt-auto" ${p.stock===0?'disabled':''}
+      <div class="card position-relative product-card h-100 ${p.stock===0?'out-of-stock':''}" onclick="${p.stock>0?'openModal('+i+')':''}">
+        ${badgeHtml}
+        <img src="${p.img}" class="card-img-top p-4" style="height:280px; object-fit:contain;">
+        <div class="card-body d-flex flex-column text-center">
+          <div class="product-name">${p.name}</div>
+          <p class="price mb-1">£${p.price}</p>
+          <p class="stock ${p.stock<=5?'text-danger':'text-success'}">
+            ${p.stock>0?`Only ${p.stock} left`:'<strong>Out of Stock</strong>'}
+          </p>
+          <button class="btn btn-success mt-auto btn-product ${p.stock===0?'disabled':''}"
+                  ${p.stock===0?'disabled':''}
                   onclick="event.stopPropagation(); openModal(${i})">
             ${p.stock>0?'Add to Cart':'Sold Out'}
           </button>
         </div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 renderProducts();
 
@@ -199,7 +527,11 @@ function updateQty(i, delta) {
   saveCart();
 }
 
-function removeFromCart(i) { cart.splice(i, 1); updateCart(); saveCart(); }
+function removeFromCart(i) {
+  cart.splice(i, 1);
+  updateCart();
+  saveCart();
+}
 
 function updateCart() {
   const totalItems = cart.reduce((s,i)=>s+i.qty,0);
@@ -211,8 +543,11 @@ function updateCart() {
     ? '<p class="text-center text-muted">Your cart is empty</p>'
     : cart.map((item,i) => `
       <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
-        <div class="flex-grow-1"><strong>${item.name}</strong><br><small>£${item.price} × ${item.qty}</small></div>
-        <div class="d-flex gap-2">
+        <div class="flex-grow-1">
+          <strong>${item.name}</strong><br>
+          <small>£${item.price} × ${item.qty}</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
           <button class="btn btn-outline-secondary btn-sm" onclick="updateQty(${i},-1)">–</button>
           <span class="fw-bold">${item.qty}</span>
           <button class="btn btn-outline-secondary btn-sm" onclick="updateQty(${i},1)">+</button>
@@ -220,7 +555,6 @@ function updateCart() {
         </div>
       </div>`).join('');
 }
-// Make sure cart UI is set initially
 updateCart();
 
 function toggleCart(force) {
@@ -231,14 +565,13 @@ function toggleCart(force) {
   ov.classList.toggle('show', open);
 }
 
-// Go to checkout – works 100% with file://
 function goToCheckout() {
   if (cart.length === 0) return alert('Your cart is empty!');
   const cartData = encodeURIComponent(JSON.stringify(cart));
   window.location.href = `checkout.html?cart=${cartData}`;
 }
-// ----- END CART PERSISTENCE -----
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
