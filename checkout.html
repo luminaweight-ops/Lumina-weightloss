@@ -99,6 +99,9 @@
                 <input type="tel" class="form-control" id="phone" placeholder="Phone number" required>
               </div>
               <div class="col-12">
+                <input type="email" class="form-control" id="email" placeholder="Email address" required>
+              </div>
+              <div class="col-12">
                 <input type="text" class="form-control" id="address1" placeholder="Address line 1" required>
               </div>
               <div class="col-12">
@@ -176,7 +179,17 @@
   </div>
 </div>
 
+<!-- EmailJS library -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
+  // ✅ INIT EMAILJS WITH YOUR PUBLIC KEY
+  (function() {
+    emailjs.init('uZOuTrBdIAc6AmKjo');
+  })();
+</script>
+
+<script>
+// Get cart from query string
 function getCart() {
   const params = new URLSearchParams(window.location.search);
   const data = params.get('cart');
@@ -203,11 +216,78 @@ document.getElementById('order-summary').innerHTML = cart.map(i => `
 `).join('');
 document.getElementById('final-total').textContent = `£${total.toFixed(2)}`;
 
+// Helpers to build email text
+function buildItemsText() {
+  return cart.map(i => `${i.qty} × ${i.name} — £${(i.price * i.qty).toFixed(2)}`).join('\n');
+}
+
+function buildAddressText(details) {
+  return [
+    details.address1,
+    details.address2,
+    details.city,
+    details.postcode
+  ].filter(Boolean).join('\n');
+}
+
+// ✅ Admin email (to you)
+function sendAdminEmail(details) {
+  const itemsText = buildItemsText();
+  const addressText = buildAddressText(details);
+
+  emailjs.send(
+    'service_i5zi096',
+    'template_x5lnd1u',
+    {
+      to_email: 'luminaweight@gmail.com',
+      customer_name: details.name,
+      customer_phone: details.phone,
+      customer_address: addressText,
+      order_reference: details.ref,
+      order_items: itemsText,
+      order_total: `£${total.toFixed(2)}`
+    }
+  )
+  .then(res => console.log('✅ Admin order email sent', res.status))
+  .catch(err => console.error('❌ Admin email failed', err));
+}
+
+// ✅ Customer confirmation email
+function sendCustomerEmail(details) {
+  const itemsText = buildItemsText();
+  const addressText = buildAddressText(details);
+
+  emailjs.send(
+    'service_i5zi096',
+    'template_juevvvd',
+    {
+      customer_email: details.email,
+      customer_name: details.name,
+      customer_address: addressText,
+      order_reference: details.ref,
+      order_items: itemsText,
+      order_total: `£${total.toFixed(2)}`
+    }
+  )
+  .then(res => console.log('✅ Customer confirmation email sent', res.status))
+  .catch(err => console.error('❌ Customer email failed', err));
+}
+
 document.getElementById('addressForm').onsubmit = function(e) {
   e.preventDefault();
+
   const name = document.getElementById('fullName').value.trim() || 'Customer';
+  const phone = document.getElementById('phone').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const address1 = document.getElementById('address1').value.trim();
+  const address2 = document.getElementById('address2').value.trim();
+  const city = document.getElementById('city').value.trim();
+  const postcode = document.getElementById('postcode').value.trim();
   const ref = 'LW' + Date.now().toString().slice(-6);
 
+  const details = { name, phone, email, address1, address2, city, postcode, ref };
+
+  // Fill modal
   document.getElementById('customerName').textContent = name;
   document.getElementById('payment-summary').innerHTML = cart.map(i => `
     <div class="d-flex justify-content-between">
@@ -219,6 +299,11 @@ document.getElementById('addressForm').onsubmit = function(e) {
   document.getElementById('payment-amount').textContent = `£${total.toFixed(2)}`;
   document.getElementById('order-ref').textContent = ref;
 
+  // Fire emails (non-blocking)
+  sendAdminEmail(details);
+  sendCustomerEmail(details);
+
+  // Show modal
   new bootstrap.Modal(document.getElementById('paymentModal')).show();
 };
 
