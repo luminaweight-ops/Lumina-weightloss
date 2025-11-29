@@ -260,8 +260,8 @@ function sendCustomerEmail(details) {
   const addressText = buildAddressText(details);
 
   emailjs.send(
-    'service_i5zi096',
-    'template_juevvvd',
+    'service_juevvd',
+    'template_i5zi096',
     {
       // send both, so template can use either {{customer_email}} or {{to_email}}
       customer_email: details.email,
