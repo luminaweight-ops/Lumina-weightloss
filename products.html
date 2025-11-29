@@ -279,7 +279,7 @@ const products = [
   // PENS
   {img:"10mg Tirz Pen.png", name:"Tirzepatide 10mg Pen", price:80, stock:10},
   {img:"20mg Tirz Pen.png", name:"Tirzepatide 20mg Pen", price:100, stock:10, badge:"Best Seller", badgeClass:"pill-popular"},
-  {img:"40mg Tirz Pen.png", name:"Tirzepatide 40mg Pen", price:125, stock:10},
+  {img:"40mg Tirz Pen .png", name:"Tirzepatide 40mg Pen", price:125, stock:10},
   {img:"60mg Tirz Pen.png", name:"Tirzepatide 60mg Pen", price:140, stock:10, badge:"Premium", badgeClass:"pill-premium"},
 
   {img:"20mg Reta Pen.png", name:"Retatrutide 20mg Pen", price:130, stock:10, badge:"Best Seller", badgeClass:"pill-popular"},
@@ -354,17 +354,25 @@ function openModal(i) {
     : 'Out of stock';
   document.getElementById('modalQty').value = 1;
 
-  // ✅ Inject Tirzepatide description for all Tirz products
   const modalDesc = document.getElementById('modalDescription');
-  const isTirzepatide = currentProduct.name.includes('Tirzepatide');
+  const name = currentProduct.name;
 
-  if (isTirzepatide) {
+  if (name.includes('Tirzepatide')) {
     modalDesc.innerHTML = `
       <p><strong>Tirzepatide</strong> is a next-generation <strong>dual GIP and GLP-1 receptor agonist</strong> developed for advanced metabolic and weight-management research. By mimicking the natural actions of both <strong>GLP-1 (glucagon-like peptide-1)</strong> and <strong>GIP (glucose-dependent insulinotropic polypeptide)</strong>, Tirzepatide supports improvements in <strong>appetite regulation, insulin sensitivity, and blood glucose control</strong>.</p>
       <p>Its unique dual-hormone mechanism helps <strong>reduce hunger, limit portion sizes, stabilise blood sugar levels, and promote sustained body-weight reduction</strong>, making it a leading compound in metabolic and weight-loss research.</p>
       <ul class="mb-0">
         <li><strong>Administration:</strong> Subcutaneous injection, once weekly</li>
         <li><strong>Primary use:</strong> Weight management, metabolic support, glucose regulation</li>
+      </ul>
+    `;
+  } else if (name.includes('Retatrutide')) {
+    modalDesc.innerHTML = `
+      <p><strong>Retatrutide</strong> is an investigational <strong>multi-receptor agonist</strong> designed for advanced metabolic and obesity research. By targeting key pathways involved in <strong>appetite control, energy balance, and glucose regulation</strong>, Retatrutide has been studied for its potent impact on body-weight reduction and metabolic health markers.</p>
+      <p>In research settings, Retatrutide has shown the potential to <strong>reduce appetite, support sustained fat loss, and improve overall metabolic profile</strong>, making it a powerful candidate for long-term weight-management protocols.</p>
+      <ul class="mb-0">
+        <li><strong>Administration:</strong> Subcutaneous injection, once weekly</li>
+        <li><strong>Primary use:</strong> Weight-management research, appetite modulation, metabolic support</li>
       </ul>
     `;
   } else {
