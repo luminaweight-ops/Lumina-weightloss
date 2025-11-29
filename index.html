@@ -266,7 +266,6 @@
     <div class="collapse navbar-collapse" id="mainNav">
       <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-3">
         <li class="nav-item"><a class="nav-link active" href="#home">Home</a></li>
-        <!-- Products link -->
         <li class="nav-item"><a class="nav-link" href="products.html">Products</a></li>
         <li class="nav-item"><a class="nav-link" href="#reviews">Reviews</a></li>
         <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
@@ -335,11 +334,15 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body text-center">
-        <img id="modalImg" src="" class="img-fluid mb-4" style="max-height: 360px;">
+        <img id="modalImg" src="" class="img-fluid mb-4" style="max-height: 320px;">
         <h3 id="modalName"></h3>
         <p class="product-price fs-1" id="modalPrice"></p>
-        <p class="stock text-success mb-3" id="modalStock"></p>
-        <div class="d-flex justify-content-center align-items-center gap-3 my-4">
+        <p class="stock text-success mb-2" id="modalStock"></p>
+
+        <!-- ✅ DESCRIPTION BLOCK -->
+        <div id="modalDescription" class="text-start small text-muted mb-3"></div>
+
+        <div class="d-flex justify-content-center align-items-center gap-3 my-3">
           <button class="btn btn-outline-secondary qty-btn" onclick="changeQty(-1)">–</button>
           <input type="number" id="modalQty" value="1" min="1" class="form-control qty-input">
           <button class="btn btn-outline-secondary qty-btn" onclick="changeQty(1)">+</button>
@@ -442,8 +445,11 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
 <script>
-// FEATURED PRODUCTS: only the four you want on home
+// -------- FEATURED PRODUCTS --------
 const products = [
   {img:"20mg Tirz Vial.png", name:"Tirzepatide 20mg Vial", price:90, stock:22, badge:"Best Seller", badgeClass:"pill-popular", featured:true},
   {img:"20mg Reta Vial.png", name:"Retatrutide 20mg Vial", price:120, stock:19, badge:"Best Seller", badgeClass:"pill-popular", featured:true},
@@ -516,12 +522,44 @@ function changeQty(delta) {
 
 function openModal(i) {
   currentProduct = products[i];
-  if (currentProduct.stock === 0) return;
-  document.getElementById('modalImg').src = currentProduct.img;
-  document.getElementById('modalTitle').textContent = currentProduct.name;
-  document.getElementById('modalName').textContent = currentProduct.name;
-  document.getElementById('modalPrice').textContent = `£${currentProduct.price}`;
-  document.getElementById('modalStock').innerHTML = `In stock – ${currentProduct.stock} units`;
+  if (!currentProduct || currentProduct.stock === 0) return;
+
+  const modalImg = document.getElementById('modalImg');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalName  = document.getElementById('modalName');
+  const modalPrice = document.getElementById('modalPrice');
+  const modalStock = document.getElementById('modalStock');
+  const descEl     = document.getElementById('modalDescription');
+
+  modalImg.src = currentProduct.img;
+  modalTitle.textContent = currentProduct.name;
+  modalName.textContent  = currentProduct.name;
+  modalPrice.textContent = `£${currentProduct.price}`;
+  modalStock.innerHTML   = `In stock – ${currentProduct.stock} units`;
+
+  // ✅ Set description based on product type
+  if (currentProduct.name.includes("Tirzepatide")) {
+    descEl.innerHTML = `
+      <p><strong>Tirzepatide</strong> is a next-generation <strong>dual GIP/GLP-1 receptor agonist</strong> used in metabolic and weight-management research.</p>
+      <p>It helps support <strong>appetite control, insulin sensitivity and blood-glucose regulation</strong>, making it ideal for long-term fat-loss protocols.</p>
+      <ul class="mb-0">
+        <li><strong>Administration:</strong> Subcutaneous, once weekly</li>
+        <li><strong>Use:</strong> Weight-loss and metabolic-balance research</li>
+      </ul>
+    `;
+  } else if (currentProduct.name.includes("Retatrutide")) {
+    descEl.innerHTML = `
+      <p><strong>Retatrutide</strong> is an advanced <strong>multi-receptor agonist</strong> being studied for powerful effects on appetite and fat metabolism.</p>
+      <p>Protocols typically focus on <strong>rapid weight reduction, improved energy balance and enhanced metabolic health</strong>.</p>
+      <ul class="mb-0">
+        <li><strong>Administration:</strong> Subcutaneous, once weekly</li>
+        <li><strong>Use:</strong> Weight-loss and metabolic-health research</li>
+      </ul>
+    `;
+  } else {
+    descEl.textContent = '';
+  }
+
   document.getElementById('modalQty').value = 1;
 
   document.getElementById('modalAddBtn').onclick = () => {
@@ -529,6 +567,7 @@ function openModal(i) {
     addToCart(currentProduct, qty);
     bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
   };
+
   new bootstrap.Modal(document.getElementById('productModal')).show();
 }
 
@@ -593,127 +632,52 @@ function goToCheckout() {
   const cartData = encodeURIComponent(JSON.stringify(cart));
   window.location.href = `checkout.html?cart=${cartData}`;
 }
-</script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>
-  // EmailJS init
-  (function () {
-    emailjs.init('uZOuTrBdIAc6AmKjo');
-  })();
+// -------- QUICK MESSAGE (EmailJS) --------
+(function () {
+  emailjs.init('uZOuTrBdIAc6AmKjo');
+})();
 
-  // Quick message logic
-  const qmForm = document.getElementById('quickMessageForm');
-  const qmBtn = document.getElementById('qm-button');
-  const qmStatus = document.getElementById('qm-status');
+const qmForm   = document.getElementById('quickMessageForm');
+const qmBtn    = document.getElementById('qm-button');
+const qmStatus = document.getElementById('qm-status');
 
-  if (qmForm) {
-    qmForm.addEventListener('submit', function (e) {
-      e.preventDefault();
+if (qmForm) {
+  qmForm.addEventListener('submit', function (e) {
+    e.preventDefault();
 
-      const name = document.getElementById('qm-name').value.trim();
-      const email = document.getElementById('qm-email').value.trim();
-      const message = document.getElementById('qm-message').value.trim();
+    const name    = document.getElementById('qm-name').value.trim();
+    const email   = document.getElementById('qm-email').value.trim();
+    const message = document.getElementById('qm-message').value.trim();
+    if (!name || !email || !message) return;
 
-      if (!name || !email || !message) return;
+    qmBtn.disabled = true;
+    qmBtn.textContent = 'Sending...';
+    qmStatus.textContent = '';
 
-      qmBtn.disabled = true;
-      qmBtn.textContent = 'Sending...';
-      qmStatus.textContent = '';
-
-      emailjs.send(
-        'service_i5zi096',
-        'template_x5lnd1u',
-        {
-          to_email: 'luminaweight@gmail.com',
-          customer_name: name,
-          customer_phone: email,
-          customer_address: 'Quick Message (No Address)',
-          order_reference: 'ENQUIRY-' + Date.now().toString().slice(-5),
-          order_items: message,
-          order_total: 'N/A'
-        }
-      ).then(() => {
-        qmStatus.textContent = 'Thanks! Your message has been sent.';
-        qmForm.reset();
-      }).catch(() => {
-        qmStatus.textContent = 'Error sending message. Please try again.';
-      }).finally(() => {
-        qmBtn.disabled = false;
-        qmBtn.textContent = 'Send enquiry';
-      });
+    emailjs.send(
+      'service_i5zi096',
+      'template_x5lnd1u',
+      {
+        to_email: 'luminaweight@gmail.com',
+        customer_name: name,
+        customer_phone: email,
+        customer_address: 'Quick Message (No Address)',
+        order_reference: 'ENQUIRY-' + Date.now().toString().slice(-5),
+        order_items: message,
+        order_total: 'N/A'
+      }
+    ).then(() => {
+      qmStatus.textContent = 'Thanks! Your message has been sent.';
+      qmForm.reset();
+    }).catch(() => {
+      qmStatus.textContent = 'Error sending message. Please try again.';
+    }).finally(() => {
+      qmBtn.disabled = false;
+      qmBtn.textContent = 'Send enquiry';
     });
-  }<!-- ✅ DESCRIPTION -->
-        <div id="modalDescription" class="text-start small text-muted mb-3"></div>
-
-        <input type="number" id="modalQty" value="1" class="form-control w-25 mx-auto mb-3">
-        <button id="modalAddBtn" class="btn btn-success btn-lg">Add to Cart</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-const products = [
-  {img:"20mg Tirz Vial.png", name:"Tirzepatide 20mg Vial", price:90, stock:22},
-  {img:"20mg Reta Vial.png", name:"Retatrutide 20mg Vial", price:120, stock:19},
-  {img:"20mg Tirz Pen.png", name:"Tirzepatide 20mg Pen", price:100, stock:10},
-  {img:"20mg Reta Pen.png", name:"Retatrutide 20mg Pen", price:130, stock:10}
-];
-
-let currentProduct = null;
-
-function renderProducts() {
-  document.getElementById('product-list').innerHTML = products.map((p,i)=>`
-    <div class="col-md-3">
-      <div class="product-card" onclick="openModal(${i})">
-        <span class="pill-label pill-popular">Best Seller</span>
-        <img src="${p.img}" class="w-100 p-3">
-        <div class="product-body">
-          <div class="product-name">${p.name}</div>
-          <div class="product-price">£${p.price}</div>
-        </div>
-      </div>
-    </div>
-  `).join('');
+  });
 }
-renderProducts();
-
-function openModal(i) {
-  currentProduct = products[i];
-
-  modalImg.src = currentProduct.img;
-  modalTitle.textContent = currentProduct.name;
-  modalName.textContent = currentProduct.name;
-  modalPrice.textContent = `£${currentProduct.price}`;
-  modalStock.textContent = `In stock – ${currentProduct.stock}`;
-
-  const desc = document.getElementById('modalDescription');
-
-  if (currentProduct.name.includes("Tirzepatide")) {
-    desc.innerHTML = `
-      <p><strong>Tirzepatide</strong> is a next-generation <strong>dual GIP and GLP-1 receptor agonist</strong> designed for metabolic and weight-management research.</p>
-      <p>It supports <strong>appetite control, insulin sensitivity and blood glucose regulation</strong>, helping promote sustained fat loss.</p>
-      <ul>
-        <li><strong>Administration:</strong> Subcutaneous, once weekly</li>
-        <li><strong>Primary Use:</strong> Weight management, metabolic support</li>
-      </ul>
-    `;
-  } 
-  else if (currentProduct.name.includes("Retatrutide")) {
-    desc.innerHTML = `
-      <p><strong>Retatrutide</strong> is an advanced <strong>multi-receptor agonist</strong> studied for its powerful effect on appetite suppression and fat metabolism.</p>
-      <p>It may support <strong>rapid weight reduction, improved energy balance and enhanced metabolic health</strong>.</p>
-      <ul>
-        <li><strong>Administration:</strong> Subcutaneous, once weekly</li>
-        <li><strong>Primary Use:</strong> Weight-loss research, metabolic optimisation</li>
-      </ul>
-    `;
-  }
-
-  new bootstrap.Modal(document.getElementById('productModal')).show();
-}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</script>
 </body>
 </html>
