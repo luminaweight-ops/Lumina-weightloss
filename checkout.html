@@ -238,8 +238,8 @@ function sendAdminEmail(details) {
   const addressText = buildAddressText(details);
 
   emailjs.send(
-    'service_x5lnd1u',
-    'template_i5zi096',
+    'service_i5zi096',
+    'template_x5lnd1u',
     {
       to_email: 'luminaweight@gmail.com',
       customer_name: details.name,
@@ -260,8 +260,8 @@ function sendCustomerEmail(details) {
   const addressText = buildAddressText(details);
 
   emailjs.send(
-    'service_juevvd',
-    'template_i5zi096',
+    'service_x5lnd1u',
+    'template_juevvvd',
     {
       // send both, so template can use either {{customer_email}} or {{to_email}}
       customer_email: details.email,
