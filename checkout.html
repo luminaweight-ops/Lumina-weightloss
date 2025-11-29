@@ -67,11 +67,6 @@
     background: var(--lw-mint);
     color: #ffffff;
   }
-  .alert-info {
-    background-color: var(--lw-blue-soft);
-    border-color: transparent;
-    color: var(--lw-dark);
-  }
 </style>
 </head>
 <body>
@@ -139,7 +134,7 @@
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Order confirmed – payment details</h5>
+        <h5 class="modal-title">Order confirmed</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
@@ -151,23 +146,22 @@
         <div id="payment-summary" class="mb-3"></div>
 
         <h4 class="text-success mb-3">
-          Total to pay: <span id="payment-total"></span>
+          Total: <span id="payment-total"></span>
         </h4>
 
-        <div class="alert alert-info text-center fs-3 fw-bold p-4" id="payment-amount"></div>
+        <p class="mb-1">
+          Your payment reference: 
+          <strong id="order-ref" class="text-primary fw-bold"></strong>
+        </p>
+        <p class="text-muted mb-0">
+          Order confirmed 
+Payment instructions have been sent to your email.
+Please use the reference code below when making your bank transfer.
 
-        <hr class="my-4">
-
-        <p class="fw-bold mb-2">Bank transfer details (UK Faster Payments)</p>
-        <ul class="list-unstyled">
-          <li><strong>Account name:</strong> Lumina Weight </li>
-          <li><strong>Sort code:</strong> 04-00-06</li>
-          <li><strong>Account number:</strong> 43351295</li>
-          <li><strong>Reference:</strong> <span id="order-ref" class="text-primary fw-bold"></span></li>
-        </ul>
+Thanks for choosing Lumina Weight.
+        </p>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-success" onclick="copyAmount()">Copy amount</button>
         <button type="button" class="btn btn-outline-success" onclick="backToShop()">Back to shop</button>
       </div>
     </div>
@@ -265,9 +259,8 @@ function sendCustomerEmail(details) {
     'service_i5zi096',
     'template_x5lnd1u',
     {
-      // Make sure your template uses {{to_email}} as the "To" address
-      to_email: details.email,
-      customer_email: details.email,             // spare variable if template uses this
+      to_email: details.email,                  // main recipient
+      customer_email: details.email,            // spare var if template uses this
       customer_name: details.name,
       customer_address: addressText,
       order_reference: details.ref,
@@ -303,7 +296,6 @@ document.getElementById('addressForm').onsubmit = function(e) {
     </div>
   `).join('');
   document.getElementById('payment-total').textContent = `£${total.toFixed(2)}`;
-  document.getElementById('payment-amount').textContent = `£${total.toFixed(2)}`;
   document.getElementById('order-ref').textContent = ref;
 
   // Send emails
@@ -317,14 +309,7 @@ document.getElementById('addressForm').onsubmit = function(e) {
   new bootstrap.Modal(document.getElementById('paymentModal')).show();
 };
 
-function copyAmount() {
-  navigator.clipboard.writeText(document.getElementById('payment-amount').textContent)
-    .then(() => alert('Amount copied!'))
-    .catch(() => alert('Copy failed – please select and copy manually'));
-}
-
 function backToShop() {
-  // Just go home – no cart in query string
   window.location.href = 'index.html';
 }
 </script>
