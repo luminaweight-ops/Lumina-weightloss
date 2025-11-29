@@ -231,7 +231,6 @@
   .qty-btn { width: 38px; height: 38px; }
   .qty-input { width: 60px; text-align: center; }
 
-  /* REVIEWS & CONTACT (simple placeholders) */
   #reviews, #contact {
     padding: 70px 0;
   }
@@ -364,7 +363,7 @@
   </div>
 </section>
 
-<!-- REVIEWS (simple placeholder) -->
+<!-- REVIEWS -->
 <section id="reviews">
   <div class="container">
     <div class="text-center mb-4">
@@ -414,17 +413,21 @@
         <div class="card shadow-sm border-0">
           <div class="card-body p-4">
             <h5 class="fw-semibold mb-3">Quick message</h5>
-            <form>
+            <!-- ✅ UPDATED FORM WITH IDS -->
+            <form id="quickMessageForm">
               <div class="mb-3">
-                <input type="text" class="form-control" placeholder="Name">
+                <input type="text" class="form-control" id="qm-name" placeholder="Name" required>
               </div>
               <div class="mb-3">
-                <input type="email" class="form-control" placeholder="Email">
+                <input type="email" class="form-control" id="qm-email" placeholder="Email" required>
               </div>
               <div class="mb-3">
-                <textarea class="form-control" rows="3" placeholder="How can we help?"></textarea>
+                <textarea class="form-control" id="qm-message" rows="3" placeholder="How can we help?" required></textarea>
               </div>
-              <button type="button" class="btn btn-primary-lw w-100">Send enquiry</button>
+              <button type="submit" class="btn btn-primary-lw w-100" id="qm-button">
+                Send enquiry
+              </button>
+              <div id="qm-status" class="mt-2 small text-muted"></div>
             </form>
           </div>
         </div>
@@ -440,7 +443,7 @@
 </footer>
 
 <script>
-// PRODUCTS (same as yours)
+// PRODUCTS
 const products = [
   {img:"10mg Tirz Vial.png", name:"Tirzepatide 10mg", price:70, stock:15, badge:"Best Value", badgeClass:"pill-best-value"},
   {img:"20mg Tirz Vial.png", name:"Tirzepatide 20mg", price:90, stock:22, badge:"Most Popular", badgeClass:"pill-popular"},
@@ -451,13 +454,11 @@ const products = [
   {img:"60mg Reta Vial.png", name:"Retatrutide 60mg", price:170, stock:5, badge:"Premium", badgeClass:"pill-premium"}
 ];
 
-// ----- CART PERSISTENCE -----
 let cart = [];
 const savedCart = localStorage.getItem('cart');
 if (savedCart) {
   try { cart = JSON.parse(savedCart); } catch(e) { cart = []; }
 }
-
 let currentProduct = null;
 
 function saveCart() {
@@ -582,51 +583,56 @@ function goToCheckout() {
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
-(function () {
-  emailjs.init('uZOuTrBdIAc6AmKjo'); // ✅ your public key
-})();
+  // EmailJS init
+  (function () {
+    emailjs.init('uZOuTrBdIAc6AmKjo');
+  })();
 
-const qmForm = document.getElementById('quickMessageForm');
-const qmBtn = document.getElementById('qm-button');
-const qmStatus = document.getElementById('qm-status');
+  // Quick message logic
+  const qmForm = document.getElementById('quickMessageForm');
+  const qmBtn = document.getElementById('qm-button');
+  const qmStatus = document.getElementById('qm-status');
 
-if (qmForm) {
-  qmForm.addEventListener('submit', function (e) {
-    e.preventDefault();
+  if (qmForm) {
+    qmForm.addEventListener('submit', function (e) {
+      e.preventDefault();
 
-    const name = document.getElementById('qm-name').value.trim();
-    const email = document.getElementById('qm-email').value.trim();
-    const message = document.getElementById('qm-message').value.trim();
+      const name = document.getElementById('qm-name').value.trim();
+      const email = document.getElementById('qm-email').value.trim();
+      const message = document.getElementById('qm-message').value.trim();
 
-    qmBtn.disabled = true;
-    qmBtn.textContent = 'Sending...';
+      if (!name || !email || !message) return;
 
-    emailjs.send(
-      'service_i5zi096',
-      'template_x5lnd1u',   // ✅ REUSING YOUR ADMIN ORDER TEMPLATE
-      {
-        to_email: 'luminaweight@gmail.com',
-        customer_name: name,
-        customer_phone: email,
-        customer_address: "Quick Message (No Address)",
-        order_reference: "ENQUIRY-" + Date.now().toString().slice(-5),
-        order_items: message,
-        order_total: "N/A"
-      }
-    ).then(() => {
-      qmStatus.textContent = "Thanks! Your message has been sent.";
-      qmForm.reset();
-    }).catch(() => {
-      qmStatus.textContent = "Error sending message. Please try again.";
-    }).finally(() => {
-      qmBtn.disabled = false;
-      qmBtn.textContent = 'Send enquiry';
+      qmBtn.disabled = true;
+      qmBtn.textContent = 'Sending...';
+      qmStatus.textContent = '';
+
+      emailjs.send(
+        'service_i5zi096',
+        'template_x5lnd1u', // reuse admin order template
+        {
+          to_email: 'luminaweight@gmail.com',
+          customer_name: name,
+          customer_phone: email,             // we stuff their email into the "phone" field
+          customer_address: 'Quick Message (No Address)',
+          order_reference: 'ENQUIRY-' + Date.now().toString().slice(-5),
+          order_items: message,              // message body
+          order_total: 'N/A'
+        }
+      ).then(() => {
+        qmStatus.textContent = 'Thanks! Your message has been sent.';
+        qmForm.reset();
+      }).catch(() => {
+        qmStatus.textContent = 'Error sending message. Please try again.';
+      }).finally(() => {
+        qmBtn.disabled = false;
+        qmBtn.textContent = 'Send enquiry';
+      });
     });
-
-  });
-}
+  }
 </script>
+
 </body>
 </html>
