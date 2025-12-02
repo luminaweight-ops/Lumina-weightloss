@@ -827,6 +827,23 @@ if (loginForm) {
     }
   });
 }
+  // --- Admin nav visibility ---
+const ADMIN_EMAIL = 'luminaweight@gmail.com';
+const adminNavItem = document.getElementById('admin-nav-item');
+
+(async () => {
+  try {
+    const { data, error } = await supabaseClient.auth.getUser();
+    const user = data?.user || null;
+
+    if (!error && adminNavItem) {
+      adminNavItem.style.display =
+        user && user.email === ADMIN_EMAIL ? 'block' : 'none';
+    }
+  } catch (e) {
+    console.error('Error checking admin user', e);
+  }
+})();
 </script>
 </body>
 </html>
