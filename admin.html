@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Orders | Lumina Weight</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+  :root {
+    --lw-bg: #f3f4f6;
+    --lw-dark: #0f172a;
+    --lw-muted: #64748b;
+  }
+
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--lw-bg);
+    color: var(--lw-dark);
+    margin: 0;
+  }
+
+  .navbar {
+    background: #111827 !important;
+  }
+  .navbar-brand span {
+    font-weight: 700;
+    color: #f9fafb;
+  }
+
+  .page-hero {
+    padding: 70px 0 30px;
+  }
+
+  .order-card {
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 10px 26px rgba(15,23,42,0.08);
+    padding: 16px 18px;
+  }
+
+  .badge-status {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+  }
+
+  footer {
+    background: #020617;
+    color: #9ca3af;
+    padding: 16px 0;
+    font-size: 0.85rem;
+    margin-top: 30px;
+  }
+
+  select.form-select.form-select-sm {
+    max-width: 150px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center" href="index.html">
+      <span>🌙 Lumina Admin</span>
+    </a>
+
+    <div class="collapse navbar-collapse">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <button id="logout-btn" class="btn btn-outline-light btn-sm rounded-pill">
+            Logout
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+      <div>
+        <h1 class="h3 mb-1">Orders</h1>
+        <p class="text-muted mb-0" id="admin-status">Checking access…</p>
+      </div>
+      <small class="text-muted">
+        Only visible to admin.
+      </small>
+    </div>
+
+    <div id="admin-warning"></div>
+    <div id="orders-list"></div>
+  </div>
+</section>
+
+<footer class="text-center">
+  <div class="container">
+    <p class="mb-0">Lumina Weight Admin</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://qketnqhfjfxbqiuqevnh.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZXRucWhmamZ4YnFpdXFldm5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NjkzMzAsImV4cCI6MjA4MDI0NTMzMH0.JIrgLIwWIA5Gwu9K4BsgS0Y_jyax2G6irqkaf35aPys";
+
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // 🔐 CHANGE THIS TO YOUR LOGIN EMAIL
+  const ADMIN_EMAIL = "you@example.com";
+
+  const statusEl   = document.getElementById('admin-status');
+  const warningEl  = document.getElementById('admin-warning');
+  const ordersEl   = document.getElementById('orders-list');
+  const logoutBtn  = document.getElementById('logout-btn');
+
+  function getStatusBadge(status) {
+    const s = (status || 'Pending').toLowerCase();
+    if (s === 'paid')   return '<span class="badge bg-success-subtle text-success badge-status">PAID</span>';
+    if (s === 'shipped')return '<span class="badge bg-primary-subtle text-primary badge-status">SHIPPED</span>';
+    if (s === 'cancelled')return '<span class="badge bg-danger-subtle text-danger badge-status">CANCELLED</span>';
+    return '<span class="badge bg-warning-subtle text-warning badge-status">PENDING</span>';
+  }
+
+  async function loadOrders() {
+    statusEl.textContent = 'Loading orders…';
+
+    const { data: orders, error } = await supabaseClient
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error(error);
+      statusEl.textContent = 'Error loading orders (check RLS policies).';
+      return;
+    }
+
+    if (!orders || orders.length === 0) {
+      statusEl.textContent = 'No orders yet.';
+      ordersEl.innerHTML = `
+        <div class="alert alert-light border text-muted">
+          When customers place orders while logged in, they’ll appear here.
+        </div>`;
+      return;
+    }
+
+    statusEl.textContent = `${orders.length} order${orders.length > 1 ? 's' : ''}`;
+
+    ordersEl.innerHTML = orders.map(order => {
+      const created = new Date(order.created_at).toLocaleString();
+      const total   = Number(order.total_amount || 0).toFixed(2);
+      const ref     = order.reference || (order.id ? order.id.slice(0,8) + '…' : 'N/A');
+      const status  = order.status || 'Pending';
+
+      const cust = order.details && order.details.customer ? order.details.customer : {};
+      const name = cust.name || 'N/A';
+      const email= cust.email || 'N/A';
+
+      const itemsHtml = order.details && order.details.items && Array.isArray(order.details.items)
+        ? order.details.items.map(item => `
+            <div class="small text-muted">${item.qty} × ${item.name} – £${Number(item.line_total || (item.price_each || 0) * item.qty).toFixed(2)}</div>
+          `).join('')
+        : '';
+
+      return `
+        <div class="order-card mb-3">
+          <div class="d-flex justify-content-between flex-wrap gap-3">
+            <div>
+              <div class="small text-muted">Ref</div>
+              <div class="fw-semibold">${ref}</div>
+              <div class="small text-muted mt-1">${created}</div>
+            </div>
+            <div>
+              <div class="small text-muted">Customer</div>
+              <div class="fw-semibold">${name}</div>
+              <div class="small text-muted">${email}</div>
+            </div>
+            <div class="text-end">
+              <div class="mb-1" id="badge-${order.id}">
+                ${getStatusBadge(status)}
+              </div>
+              <div class="fw-bold fs-5">£${total}</div>
+              <select class="form-select form-select-sm mt-2" onchange="updateOrderStatus('${order.id}', this.value)">
+                <option value="Pending"   ${status === 'Pending'   ? 'selected' : ''}>Pending</option>
+                <option value="Paid"      ${status === 'Paid'      ? 'selected' : ''}>Paid</option>
+                <option value="Shipped"   ${status === 'Shipped'   ? 'selected' : ''}>Shipped</option>
+                <option value="Cancelled" ${status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+              </select>
+            </div>
+          </div>
+          ${itemsHtml ? `<div class="mt-2">${itemsHtml}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.updateOrderStatus = async function(orderId, newStatus) {
+    const { error } = await supabaseClient
+      .from('orders')
+      .update({ status: newStatus })
+      .eq('id', orderId);
+
+    if (error) {
+      console.error('Update failed', error);
+      alert('Could not update status (check Supabase policies).');
+      return;
+    }
+
+    const badgeDiv = document.getElementById(`badge-${orderId}`);
+    if (badgeDiv) badgeDiv.innerHTML = getStatusBadge(newStatus);
+  }
+
+  async function initAdmin() {
+    const { data, error } = await supabaseClient.auth.getUser();
+
+    if (error || !data || !data.user) {
+      window.location.href = 'index.html';
+      return;
+    }
+
+    const user = data.user;
+    if (user.email !== ADMIN_EMAIL) {
+      warningEl.innerHTML = `
+        <div class="alert alert-danger">
+          You are logged in as <strong>${user.email}</strong> but this page is restricted.
+        </div>`;
+      statusEl.textContent = 'Access denied.';
+      ordersEl.innerHTML = '';
+      return;
+    }
+
+    statusEl.textContent = 'Authorised. Loading orders…';
+    loadOrders();
+  }
+
+  logoutBtn.addEventListener('click', async () => {
+    await supabaseClient.auth.signOut();
+    window.location.href = 'index.html';
+  });
+
+  initAdmin();
+</script>
+</body>
+</html>
