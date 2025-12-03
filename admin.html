@@ -111,61 +111,61 @@
   }
 
   function sendShippedEmail(order) {
-  console.log("📦 Preparing shipped email for order:", order);
+    console.log("📦 Preparing shipped email for order:", order);
 
-  if (!order) {
-    console.warn("❌ No order object passed to sendShippedEmail");
-    return;
+    if (!order) {
+      console.warn("❌ No order object passed to sendShippedEmail");
+      return;
+    }
+
+    if (!window.emailjs) {
+      console.warn("⚠️ EmailJS not available, cannot send shipped email");
+      return;
+    }
+
+    // Prefer details.customer, but fall back to top-level fields if needed
+    const customer = order.details?.customer || {};
+    const toEmail =
+      customer.email ||
+      order.customer_email || // in case you later add a column
+      order.email ||
+      "";
+
+    const customerName =
+      customer.name || order.customer_name || order.name || "Customer";
+
+    if (!toEmail) {
+      console.warn("❌ No email found on order, cannot send shipped email");
+      return;
+    }
+
+    const ref = order.reference || order.id;
+    const total = `£${Number(order.total_amount || 0).toFixed(2)}`;
+    const items = buildItemsText(order);
+
+    console.log(
+      "📨 Sending shipped email via EmailJS to:",
+      toEmail,
+      "ref:",
+      ref
+    );
+
+    emailjs
+      .send("service_i5zi096", "template_shipped", {
+        to_email: toEmail,
+        customer_name: customerName,
+        order_reference: ref,
+        order_items: items,
+        order_total: total,
+      })
+      .then((res) => {
+        console.log("✅ Shipped email sent", res.status, res.text);
+      })
+      .catch((err) => {
+        console.error("❌ Shipped email failed", err);
+        alert("Shipped email failed – check console for details.");
+      });
   }
-
-  if (!window.emailjs) {
-    console.warn("⚠️ EmailJS not available, cannot send shipped email");
-    return;
-  }
-
-  // Prefer details.customer, but fall back to top-level fields if needed
-  const customer = order.details?.customer || {};
-  const toEmail =
-    customer.email ||
-    order.customer_email || // in case you later add a column
-    order.email ||
-    "";
-
-  const customerName =
-    customer.name || order.customer_name || order.name || "Customer";
-
-  if (!toEmail) {
-    console.warn("❌ No email found on order, cannot send shipped email");
-    return;
-  }
-
-  const ref = order.reference || order.id;
-  const total = `£${Number(order.total_amount || 0).toFixed(2)}`;
-  const items = buildItemsText(order);
-
-  console.log(
-    "📨 Sending shipped email via EmailJS to:",
-    toEmail,
-    "ref:",
-    ref
-  );
-
-  emailjs
-    .send("service_i5zi096", "template_shipped", {
-      email: toEmail,              // ✅ matches {{email}} in your template
-      customer_name: customerName,
-      order_reference: ref,
-      order_items: items,
-      order_total: total,
-    })
-    .then((res) => {
-      console.log("✅ Shipped email sent", res.status, res.text);
-    })
-    .catch((err) => {
-      console.error("❌ Shipped email failed", err);
-      alert("Shipped email failed – check console for details.");
-    });
-}
 
   async function updateStatus(id, value) {
     console.log("🔄 Updating status for", id, "to", value);
