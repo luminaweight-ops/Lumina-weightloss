@@ -1,63 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Orders | Lumina Weight</title>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<style>
-  body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #f3f4f6;
-  }
-
-  .navbar {
-    background: #020617;
-  }
-
-  .navbar-brand {
-    color: #fff;
-    font-weight: 700;
-  }
-
-  .order-card {
-    background: #fff;
-    border-radius: 16px;
-    padding: 16px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-  }
-
-  .badge-status {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-  }
-</style>
-</head>
-<body>
-
-<!-- NAV -->
-<nav class="navbar navbar-dark">
-  <div class="container d-flex justify-content-between">
-    <span class="navbar-brand">🌙 Lumina Admin</span>
-    <button id="logout-btn" class="btn btn-outline-light btn-sm">Logout</button>
-  </div>
-</nav>
-
-<!-- CONTENT -->
-<div class="container mt-4">
-  <h3>Orders</h3>
-  <p id="admin-status" class="text-muted">Checking access…</p>
-
-  <div id="admin-warning"></div>
-  <div id="orders-list" class="mt-3"></div>
-</div>
-
-<!-- Supabase + EmailJS -->
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-
 <script>
   const SUPABASE_URL = "https://qketnqhfjfxbqiuqevnh.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZXRucWhmamZ4YnFpdXFldm5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NjkzMzAsImV4cCI6MjA4MDI0NTMzMH0.JIrgLIwWIA5Gwu9K4BsgS0Y_jyax2G6irqkaf35aPys";
@@ -66,9 +6,12 @@
 
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // Init EmailJS
-  (function() {
-    emailjs.init('uZOuTrBdIAc6AmKjo');
+  // ✅ Init EmailJS (v4 syntax)
+  (function () {
+    emailjs.init({
+      publicKey: "uZOuTrBdIAc6AmKjo",
+    });
+    console.log("✅ EmailJS initialized");
   })();
 
   const statusEl  = document.getElementById("admin-status");
@@ -81,49 +24,79 @@
 
   function badge(status) {
     status = (status || "Pending").toLowerCase();
-    if (status === "paid")     return `<span class="badge bg-success">PAID</span>`;
-    if (status === "shipped")  return `<span class="badge bg-primary">SHIPPED</span>`;
-    if (status === "cancelled")return `<span class="badge bg-danger">CANCELLED</span>`;
+    if (status === "paid")      return `<span class="badge bg-success">PAID</span>`;
+    if (status === "shipped")   return `<span class="badge bg-primary">SHIPPED</span>`;
+    if (status === "cancelled") return `<span class="badge bg-danger">CANCELLED</span>`;
     return `<span class="badge bg-warning text-dark">PENDING</span>`;
   }
 
   function buildItemsText(order) {
     const items = order?.details?.items || [];
     if (!items.length) return "Items not recorded.";
-    return items.map(i =>
-      `${i.qty} × ${i.name} — £${Number(i.line_total || (i.price_each || 0) * i.qty).toFixed(2)}`
-    ).join('\n');
+    return items
+      .map((i) =>
+        `${i.qty} × ${i.name} — £${Number(
+          i.line_total || (i.price_each || 0) * i.qty
+        ).toFixed(2)}`
+      )
+      .join("\n");
   }
 
   function sendShippedEmail(order) {
-    if (!order || !order.details || !order.details.customer) return;
+    console.log("📦 Preparing shipped email for order:", order);
 
-    const customer = order.details.customer;
-    const toEmail = customer.email;
-    if (!toEmail) return;
+    if (!order) {
+      console.warn("❌ No order object passed to sendShippedEmail");
+      return;
+    }
 
-    const ref   = order.reference || order.id;
+    // Prefer details.customer, but fall back to top-level fields if needed
+    const customer = order.details?.customer || {};
+    const toEmail =
+      customer.email ||
+      order.customer_email || // in case you later add a column
+      order.email ||
+      "";
+
+    const customerName =
+      customer.name || order.customer_name || order.name || "Customer";
+
+    if (!toEmail) {
+      console.warn("❌ No email found on order, cannot send shipped email");
+      return;
+    }
+
+    const ref = order.reference || order.id;
     const total = `£${Number(order.total_amount || 0).toFixed(2)}`;
     const items = buildItemsText(order);
 
-    emailjs.send(
-      'service_i5zi096',
-      'template_shipped',
-      {
+    console.log(
+      "📨 Sending shipped email via EmailJS to:",
+      toEmail,
+      "ref:",
+      ref
+    );
+
+    emailjs
+      .send("service_i5zi096", "template_shipped", {
         to_email: toEmail,
-        customer_name: customer.name || '',
+        customer_name: customerName,
         order_reference: ref,
         order_items: items,
-        order_total: total
-      }
-    ).then(res => {
-      console.log('✅ Shipped email sent', res.status);
-    }).catch(err => {
-      console.error('❌ Shipped email failed', err);
-    });
+        order_total: total,
+      })
+      .then((res) => {
+        console.log("✅ Shipped email sent", res.status, res.text);
+      })
+      .catch((err) => {
+        console.error("❌ Shipped email failed", err);
+        alert("Shipped email failed – check console for details.");
+      });
   }
 
   async function updateStatus(id, value) {
+    console.log("🔄 Updating status for", id, "to", value);
+
     const { error } = await supabaseClient
       .from("Orders")
       .update({ status: value })
@@ -135,9 +108,16 @@
       return;
     }
 
+    // Keep cache status in sync
+    if (ordersCache[id]) {
+      ordersCache[id].status = value;
+    }
+
     // If marked as Shipped → send dispatch email
     if (value === "Shipped" && ordersCache[id]) {
       sendShippedEmail(ordersCache[id]);
+    } else if (value === "Shipped") {
+      console.warn("⚠️ No cached order found for id:", id);
     }
   }
 
@@ -161,17 +141,28 @@
     statusEl.textContent = `${orders.length} orders found`;
 
     // Fill cache
-    orders.forEach(o => { ordersCache[o.id] = o; });
+    orders.forEach((o) => {
+      ordersCache[o.id] = o;
+    });
 
-    ordersEl.innerHTML = orders.map(order => {
-      const created = new Date(order.created_at).toLocaleString();
-      const ref     = order.reference || order.id;
-      const status  = order.status || "Pending";
-      const email   = order.details?.customer?.email || "No email";
-      const name    = order.details?.customer?.name || "Customer";
-      const total   = Number(order.total_amount || 0).toFixed(2);
+    ordersEl.innerHTML = orders
+      .map((order) => {
+        const created = new Date(order.created_at).toLocaleString();
+        const ref = order.reference || order.id;
+        const status = order.status || "Pending";
+        const email =
+          order.details?.customer?.email ||
+          order.customer_email ||
+          order.email ||
+          "No email";
+        const name =
+          order.details?.customer?.name ||
+          order.customer_name ||
+          order.name ||
+          "Customer";
+        const total = Number(order.total_amount || 0).toFixed(2);
 
-      return `
+        return `
         <div class="order-card mb-3">
           <div class="d-flex justify-content-between">
             <div>
@@ -195,7 +186,8 @@
           </div>
         </div>
       `;
-    }).join("");
+      })
+      .join("");
   }
 
   async function init() {
@@ -207,7 +199,8 @@
     }
 
     if (data.user.email !== ADMIN_EMAIL) {
-      warningEl.innerHTML = `<div class="alert alert-danger">Access denied.</div>`;
+      warningEl.innerHTML =
+        '<div class="alert alert-danger">Access denied.</div>';
       statusEl.textContent = "Not authorised";
       return;
     }
@@ -223,6 +216,3 @@
 
   init();
 </script>
-
-</body>
-</html>
