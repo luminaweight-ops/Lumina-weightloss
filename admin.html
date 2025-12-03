@@ -54,7 +54,9 @@
   <div id="orders-list" class="mt-3"></div>
 </div>
 
+<!-- Supabase + EmailJS -->
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 <script>
   const SUPABASE_URL = "https://qketnqhfjfxbqiuqevnh.supabase.co";
@@ -64,36 +66,86 @@
 
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+  // Init EmailJS
+  (function() {
+    emailjs.init('uZOuTrBdIAc6AmKjo');
+  })();
+
   const statusEl  = document.getElementById("admin-status");
   const ordersEl  = document.getElementById("orders-list");
   const warningEl = document.getElementById("admin-warning");
   const logoutBtn = document.getElementById("logout-btn");
 
+  // Cache orders by id so we know details when status changes
+  const ordersCache = {};
+
   function badge(status) {
     status = (status || "Pending").toLowerCase();
-    if (status === "paid") return `<span class="badge bg-success">PAID</span>`;
-    if (status === "shipped") return `<span class="badge bg-primary">SHIPPED</span>`;
-    if (status === "cancelled") return `<span class="badge bg-danger">CANCELLED</span>`;
+    if (status === "paid")     return `<span class="badge bg-success">PAID</span>`;
+    if (status === "shipped")  return `<span class="badge bg-primary">SHIPPED</span>`;
+    if (status === "cancelled")return `<span class="badge bg-danger">CANCELLED</span>`;
     return `<span class="badge bg-warning text-dark">PENDING</span>`;
+  }
+
+  function buildItemsText(order) {
+    const items = order?.details?.items || [];
+    if (!items.length) return "Items not recorded.";
+    return items.map(i =>
+      `${i.qty} × ${i.name} — £${Number(i.line_total || (i.price_each || 0) * i.qty).toFixed(2)}`
+    ).join('\n');
+  }
+
+  function sendShippedEmail(order) {
+    if (!order || !order.details || !order.details.customer) return;
+
+    const customer = order.details.customer;
+    const toEmail = customer.email;
+    if (!toEmail) return;
+
+    const ref   = order.reference || order.id;
+    const total = `£${Number(order.total_amount || 0).toFixed(2)}`;
+    const items = buildItemsText(order);
+
+    emailjs.send(
+      'service_i5zi096',
+      'template_shipped', // make sure this exists in EmailJS
+      {
+        to_email: toEmail,
+        customer_name: customer.name || '',
+        order_reference: ref,
+        order_items: items,
+        order_total: total
+      }
+    ).then(res => {
+      console.log('✅ Shipped email sent', res.status);
+    }).catch(err => {
+      console.error('❌ Shipped email failed', err);
+    });
   }
 
   async function updateStatus(id, value) {
     const { error } = await supabaseClient
-  .from("Orders")
-  .update({ status: value })
-  .eq("id", id);
+      .from("Orders")
+      .update({ status: value })
+      .eq("id", id);
 
     if (error) {
       alert("Update failed – check Supabase policy");
       console.error(error);
+      return;
+    }
+
+    // If marked as Shipped → send dispatch email
+    if (value === "Shipped" && ordersCache[id]) {
+      sendShippedEmail(ordersCache[id]);
     }
   }
 
   async function loadOrders() {
     const { data: orders, error } = await supabaseClient
-  .from("Orders")
-  .select("*")
-  .order("created_at", { ascending: false });
+      .from("Orders")
+      .select("*")
+      .order("created_at", { ascending: false });
 
     if (error) {
       statusEl.textContent = "Could not load orders.";
@@ -108,30 +160,42 @@
 
     statusEl.textContent = `${orders.length} orders found`;
 
-    ordersEl.innerHTML = orders.map(order => `
-      <div class="order-card mb-3">
-        <div class="d-flex justify-content-between">
-          <div>
-            <strong>${order.reference || order.id}</strong><br>
-            <small>${new Date(order.created_at).toLocaleString()}</small><br>
-            <small>${order.details?.customer?.email || "No email"}</small>
-          </div>
+    // Fill cache
+    orders.forEach(o => { ordersCache[o.id] = o; });
 
-          <div class="text-end">
-            ${badge(order.status)}
-            <div class="fw-bold">£${Number(order.total_amount).toFixed(2)}</div>
+    ordersEl.innerHTML = orders.map(order => {
+      const created = new Date(order.created_at).toLocaleString();
+      const ref     = order.reference || order.id;
+      const status  = order.status || "Pending";
+      const email   = order.details?.customer?.email || "No email";
+      const name    = order.details?.customer?.name || "Customer";
+      const total   = Number(order.total_amount || 0).toFixed(2);
 
-            <select class="form-select form-select-sm mt-1"
-              onchange="updateStatus('${order.id}', this.value)">
-              <option ${order.status === "Pending" ? "selected" : ""}>Pending</option>
-              <option ${order.status === "Paid" ? "selected" : ""}>Paid</option>
-              <option ${order.status === "Shipped" ? "selected" : ""}>Shipped</option>
-              <option ${order.status === "Cancelled" ? "selected" : ""}>Cancelled</option>
-            </select>
+      return `
+        <div class="order-card mb-3">
+          <div class="d-flex justify-content-between">
+            <div>
+              <strong>${ref}</strong><br>
+              <small>${created}</small><br>
+              <small>${name} — ${email}</small>
+            </div>
+
+            <div class="text-end">
+              <div class="mb-1">${badge(status)}</div>
+              <div class="fw-bold">£${total}</div>
+
+              <select class="form-select form-select-sm mt-1"
+                onchange="updateStatus('${order.id}', this.value)">
+                <option ${status === "Pending" ? "selected" : ""}>Pending</option>
+                <option ${status === "Paid" ? "selected" : ""}>Paid</option>
+                <option ${status === "Shipped" ? "selected" : ""}>Shipped</option>
+                <option ${status === "Cancelled" ? "selected" : ""}>Cancelled</option>
+              </select>
+            </div>
           </div>
         </div>
-      </div>
-    `).join("");
+      `;
+    }).join("");
   }
 
   async function init() {
