@@ -114,6 +114,15 @@
 
             <h4 class="fw-semibold mb-3">Order summary</h4>
             <div id="order-summary"></div>
+
+            <!-- Bundle info on checkout -->
+            <div id="bundle-message" class="small text-warning mt-2"></div>
+            <div class="d-flex justify-content-between small text-success mt-1"
+                 id="bundle-row" style="display:none;">
+              <span>Bundle discount</span>
+              <span id="bundle-amount">-£0.00</span>
+            </div>
+
             <div class="d-flex justify-content-between fs-4 fw-bold mt-3">
               <span>Total:</span>
               <span id="final-total">£0.00</span>
@@ -146,9 +155,10 @@
         <h5 class="fw-semibold">Your order</h5>
         <div id="payment-summary" class="mb-3"></div>
 
-        <h4 class="text-success mb-3">
+        <h4 class="text-success mb-1">
           Total: <span id="payment-total"></span>
         </h4>
+        <p id="payment-discount" class="text-success small mb-3" style="display:none;"></p>
 
         <p class="mb-1">
           Your payment reference: 
@@ -187,6 +197,58 @@
 <script>
 let cart = [];
 let total = 0;
+
+// ---------- BUNDLE CALCULATOR (same logic as cart) ----------
+function calculateBundle(cart) {
+  let vialQty = 0, penQty = 0;
+  let vialTotal = 0, penTotal = 0, otherTotal = 0;
+
+  cart.forEach(item => {
+    const line = (item.price || 0) * (item.qty || 0);
+    const name = (item.name || '').toLowerCase();
+
+    if (name.includes('vial')) {
+      vialQty  += item.qty;
+      vialTotal += line;
+    } else if (name.includes('pen')) {
+      penQty   += item.qty;
+      penTotal += line;
+    } else {
+      otherTotal += line;
+    }
+  });
+
+  const baseTotal = vialTotal + penTotal + otherTotal;
+  let discount = 0;
+  const messages = [];
+
+  // VIAL bundles
+  if (vialQty >= 3) {
+    const d = vialTotal * 0.10; // 10% off vials
+    discount += d;
+    messages.push('10% multi-vial bundle discount applied.');
+  } else if (vialQty === 2) {
+    const d = vialTotal * 0.05; // 5% off vials
+    discount += d;
+    messages.push('5% vial bundle discount applied (2 vials).');
+  }
+
+  // PEN bundles
+  if (penQty >= 2) {
+    const d = penTotal * 0.05; // 5% off pens
+    discount += d;
+    messages.push('5% pen bundle discount applied (2+ pens).');
+  }
+
+  const finalTotal = Math.max(0, baseTotal - discount);
+
+  return {
+    baseTotal,
+    discount,
+    finalTotal,
+    messages
+  };
+}
 
 // ---------- CART / RECOVERY HELPERS ----------
 function getCartFromUrlOrStorage() {
@@ -248,15 +310,34 @@ async function maybeRecoverCart() {
 
 function renderOrderSummary() {
   if (!cart.length) return;
-  total = cart.reduce((s, i) => s + i.price * i.qty, 0);
 
-  document.getElementById('order-summary').innerHTML = cart.map(i => `
+  const bundle = calculateBundle(cart);
+  total = bundle.finalTotal;
+
+  const summaryEl       = document.getElementById('order-summary');
+  const totalEl         = document.getElementById('final-total');
+  const bundleRow       = document.getElementById('bundle-row');
+  const bundleAmountEl  = document.getElementById('bundle-amount');
+  const bundleMessageEl = document.getElementById('bundle-message');
+
+  summaryEl.innerHTML = cart.map(i => `
     <div class="d-flex justify-content-between py-2 border-bottom">
       <span>${i.qty} × ${i.name}</span>
       <span>£${(i.price * i.qty).toFixed(2)}</span>
     </div>
   `).join('');
-  document.getElementById('final-total').textContent = `£${total.toFixed(2)}`;
+
+  if (bundle.discount > 0) {
+    if (bundleRow) bundleRow.style.display = 'flex';
+    if (bundleAmountEl) bundleAmountEl.textContent = `-£${bundle.discount.toFixed(2)}`;
+    if (bundleMessageEl) bundleMessageEl.textContent = bundle.messages.join(' ');
+  } else {
+    if (bundleRow) bundleRow.style.display = 'none';
+    if (bundleAmountEl) bundleAmountEl.textContent = '-£0.00';
+    if (bundleMessageEl) bundleMessageEl.textContent = '';
+  }
+
+  if (totalEl) totalEl.textContent = `£${bundle.finalTotal.toFixed(2)}`;
 }
 
 function buildItemsText() {
@@ -417,7 +498,7 @@ function sendAbandonedEmail(details, recoveryLink) {
 
   return emailjs.send(
     'service_i5zi096',
-    'template_guh3ord', // <- your abandoned checkout template ID
+    'template_guh3ord', // abandoned checkout template
     {
       to_email: details.email,
       customer_name: details.name || 'there',
@@ -452,6 +533,10 @@ document.getElementById('addressForm').onsubmit = async function(e) {
     return;
   }
 
+  // Recalculate bundle & total right before saving / emailing
+  const bundle = calculateBundle(cart);
+  total = bundle.finalTotal;
+
   const details = { name, phone, email, address1, address2, city, postcode, ref };
 
   // Fill modal
@@ -463,6 +548,18 @@ document.getElementById('addressForm').onsubmit = async function(e) {
     </div>
   `).join('');
   document.getElementById('payment-total').textContent = `£${total.toFixed(2)}`;
+
+  const paymentDiscountEl = document.getElementById('payment-discount');
+  if (paymentDiscountEl) {
+    if (bundle.discount > 0) {
+      paymentDiscountEl.style.display = 'block';
+      paymentDiscountEl.textContent = `Bundle discount applied: -£${bundle.discount.toFixed(2)}`;
+    } else {
+      paymentDiscountEl.style.display = 'none';
+      paymentDiscountEl.textContent = '';
+    }
+  }
+
   document.getElementById('order-ref').textContent = ref;
 
   // Abandoned / recovery setup
