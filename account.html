@@ -163,12 +163,10 @@
     const { data: { user }, error } = await supabaseClient.auth.getUser();
 
     if (error || !user) {
-      greetingEl.textContent = "You’re not logged in.";
-      statusEl.innerHTML = 'Please <a href="index.html" class="link-primary">return to the home page</a> and log in.';
-      ordersEl.innerHTML = '';
-      logoutBtn.style.display = 'none';
-      return;
-    }
+  // 🔒 HARD PROTECTION: no access if not logged in
+  window.location.href = 'index.html';
+  return;
+}
 
     greetingEl.textContent = `Signed in as ${user.email}`;
     statusEl.textContent = 'Loading orders…';
