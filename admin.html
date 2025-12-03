@@ -248,7 +248,7 @@
       .join("");
   }
 
- async function init() {
+  async function init() {
   statusEl.textContent = "Checking access…";
 
   const { data: sessionData, error: sessionError } =
@@ -271,7 +271,7 @@
 
   statusEl.textContent = "Admin verified ✅";
   loadOrders();
-}
+  }
 
   logoutBtn.onclick = async () => {
     await supabaseClient.auth.signOut();
