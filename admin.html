@@ -152,11 +152,11 @@
 
   emailjs
     .send("service_i5zi096", "template_shipped", {
-      email: toEmail,              // ✅ matches {{email}} in your template
-      customer_name: customerName,
-      order_reference: ref,
-      order_items: items,
-      order_total: total,
+      email: details.email,              // ✅ matches {{email}} in your template
+      customer_name: details.name,
+      order_reference: details.ref,
+      order_items: itemsText,
+      order_total: `£${total.toFixed(2)}`,
     })
     .then((res) => {
       console.log("✅ Shipped email sent", res.status, res.text);
