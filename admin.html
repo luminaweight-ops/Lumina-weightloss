@@ -64,19 +64,16 @@
 
   const ADMIN_EMAIL = "luminaweight@gmail.com";
 
+  // ⬇️ IMPORTANT: change this to your REAL EmailJS template ID for “Order Shipped”
+  const EMAILJS_TEMPLATE_SHIPPED = "template_shipped"; // e.g. "template_abcd123"
+
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // ✅ Init EmailJS (defensive, so it can't crash the script)
+  // ✅ Init EmailJS the same way as your other pages
   (function () {
     try {
-      if (window.emailjs) {
-        emailjs.init({
-          publicKey: "uZOuTrBdIAc6AmKjo",
-        });
-        console.log("✅ EmailJS initialized");
-      } else {
-        console.warn("⚠️ EmailJS library not loaded");
-      }
+      emailjs.init("uZOuTrBdIAc6AmKjo");
+      console.log("✅ EmailJS initialized");
     } catch (e) {
       console.error("❌ EmailJS init failed", e);
     }
@@ -127,7 +124,7 @@
     const customer = order.details?.customer || {};
     const toEmail =
       customer.email ||
-      order.customer_email || // in case you later add a column
+      order.customer_email ||
       order.email ||
       "";
 
@@ -151,8 +148,8 @@
     );
 
     emailjs
-      .send('service_i5zi096', 'template_shipped', {
-        email: toEmail,
+      .send("service_i5zi096", "template_abcd123", {
+        email: toEmail,              // ✅ matches {{email}} in your template
         customer_name: customerName,
         order_reference: ref,
         order_items: items,
@@ -163,7 +160,7 @@
       })
       .catch((err) => {
         console.error("❌ Shipped email failed", err);
-        alert("Shipped email failed – check console for details.");
+        alert("Shipped email failed: " + (err.text || err.message || "unknown error"));
       });
   }
 
