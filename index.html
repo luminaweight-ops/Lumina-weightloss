@@ -171,7 +171,7 @@
     cursor: not-allowed;
   }
   .product-card img {
-    height: 220px; /* smaller than before */
+    height: 220px;
     object-fit: contain;
   }
   .product-body {
@@ -203,8 +203,8 @@
     color: #ffffff;
   }
   .pill-best-value { background: #f97316; }
-  .pill-popular     { background: #22c55e; }
-  .pill-premium     { background: #6366f1; }
+  .pill-popular    { background: #22c55e; }
+  .pill-premium    { background: #6366f1; }
 
   .stock {
     font-size: 0.9rem;
@@ -289,7 +289,7 @@
           <a class="nav-link" href="admin.html">Admin</a>
         </li>
 
-        <!-- NEW: Login / My Account link -->
+        <!-- Login / My Account link -->
         <li class="nav-item">
           <a class="nav-link" href="#" id="account-link" data-bs-toggle="modal" data-bs-target="#authModal">
             Login
@@ -309,7 +309,7 @@
 
 <!-- NEXT-DAY DELIVERY BANNER -->
 <div class="delivery-banner">
-  ⚡ <strong>Next-day UK delivery</strong> on orders placed before <strong>3pm (Mon–Fri)</strong>. 
+  ⚡ <strong>Next-day UK delivery</strong> on orders placed before <strong>3pm (Mon–Fri)</strong>.
   Discreet packaging, tracked service.
 </div>
 
@@ -396,7 +396,7 @@
       <div class="section-eyebrow">Popular</div>
       <h2 class="section-title">Featured Lumina Protocols</h2>
       <p class="section-subtitle">
-        Our most requested 20mg vials and pens, supplied strictly for <strong>laboratory research use only</strong>. 
+        Our most requested 20mg vials and pens, supplied strictly for <strong>laboratory research use only</strong>.
         For every strength and format, head to the full products page.
       </p>
     </div>
@@ -526,9 +526,9 @@
 <footer class="text-center">
   <div class="container">
     <p class="mb-0">
-     <p class="mb-0">© 2025 Lumina Weight • Premium Weight Loss Peptides • Research Purposes Only • Not For Human Consumption</p>
+      © 2025 Lumina Weight • Premium Weight Loss Peptides • Research Purposes Only • Not For Human Consumption<br>
       <a href="privacy.html" class="text-decoration-none">Privacy</a> •
-    <a href="shipping.html" class="text-decoration-none">Shipping</a> •
+      <a href="shipping.html" class="text-decoration-none">Shipping</a> •
       <a href="terms.html" class="text-decoration-none">Terms</a> •
       <a href="disclaimer.html" class="text-decoration-none">Disclaimer</a> •
       <a href="returns.html" class="text-decoration-none">Returns</a>
@@ -549,13 +549,8 @@
 </script>
 
 <script>
-// -------- FEATURED PRODUCTS --------
-const products = [
-  {img:"20mg Tirz Vial.png", name:"Tirzepatide 20mg Vial", price:90, stock:22, badge:"Best Seller", badgeClass:"pill-popular", featured:true},
-  {img:"20mg Reta Vial.png", name:"Retatrutide 20mg Vial", price:120, stock:19, badge:"Best Seller", badgeClass:"pill-popular", featured:true},
-  {img:"20mg Tirz Pen.png", name:"Tirzepatide 20mg Pen", price:100, stock:10, badge:"Best Seller", badgeClass:"pill-popular", featured:true},
-  {img:"20mg Reta Pen.png", name:"Retatrutide 20mg Pen", price:130, stock:10, badge:"Best Seller", badgeClass:"pill-popular", featured:true}
-];
+// -------- FEATURED PRODUCTS (FROM SUPABASE) --------
+let products = []; // will be filled from Supabase
 
 let cart = [];
 const savedCart = localStorage.getItem('cart');
@@ -576,7 +571,7 @@ function renderProducts() {
       <div class="col-md-3">
         <div class="position-relative h-100 product-card ${p.stock===0?'out-of-stock':''}" onclick="${p.stock>0?'openModal('+i+')':''}">
           ${p.badge ? `<span class="pill-label ${p.badgeClass || ''}">${p.badge}</span>` : ''}
-          <img src="${p.img}" class="w-100 p-4" alt="${p.name}">
+          <img src="${p.image}" class="w-100 p-4" alt="${p.name}">
           <div class="product-body d-flex flex-column">
             <div class="text-start">
               <div class="text-uppercase text-xs text-muted" style="font-size: .75rem;">
@@ -618,7 +613,28 @@ function renderProducts() {
     </div>
     `;
 }
-renderProducts();
+
+async function loadFeaturedProducts() {
+  const { data, error } = await supabaseClient
+    .from('Products')
+    .select('*')
+    .eq('featured', true)
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('Error loading featured products', error);
+    return;
+  }
+
+  products = (data || []).map(p => ({
+    ...p,
+    badge: 'Best Seller',
+    badgeClass: 'pill-popular'
+  }));
+
+  renderProducts();
+}
+loadFeaturedProducts();
 
 function changeQty(delta) {
   const input = document.getElementById('modalQty');
@@ -638,7 +654,7 @@ function openModal(i) {
   const modalStock = document.getElementById('modalStock');
   const descEl     = document.getElementById('modalDescription');
 
-  modalImg.src = currentProduct.img;
+  modalImg.src = currentProduct.image;
   modalTitle.textContent = currentProduct.name;
   modalName.textContent  = currentProduct.name;
   modalPrice.textContent = `£${currentProduct.price}`;
@@ -673,8 +689,8 @@ function openModal(i) {
 
   document.getElementById('modalAddBtn').onclick = () => {
     const qty = parseInt(document.getElementById('modalQty').value) || 1;
-    addToCart(currentProduct, qty);
-    bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+      addToCart(currentProduct, qty);
+      bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
   };
 
   new bootstrap.Modal(document.getElementById('productModal')).show();
@@ -800,7 +816,7 @@ async function updateAccountLink() {
     accountLink.textContent = 'My Account';
     accountLink.removeAttribute('data-bs-toggle');
     accountLink.removeAttribute('data-bs-target');
-    accountLink.href = 'account.html'; // you'll create this page next
+    accountLink.href = 'account.html';
   } else {
     accountLink.textContent = 'Login';
     accountLink.href = '#';
