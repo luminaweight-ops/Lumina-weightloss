@@ -493,10 +493,10 @@
 
       try {
         const res = await supabaseClient
-          .from('reviews')
-          .select('*')
-          .eq('is_published', true)
-          .order('created_at', { ascending: false });
+  .from('Reviews')
+  .select('*')
+  .eq('approved', true)
+  .order('created_at', { ascending: false });
 
         dbReviews = res.data || [];
         error = res.error || null;
@@ -588,13 +588,15 @@
       revStatus.textContent = '';
 
       const { error } = await supabaseClient
-        .from('reviews')
-        .insert({
-          name,
-          rating,
-          message,
-          is_published: false   // goes to admin first
-        });
+  .from('Reviews')
+  .insert({
+    name: name || "Anonymous",
+    email: "not_provided@luminaweight.xyz",
+    product_name: "General Store Review",
+    rating: rating,
+    review_text: message,
+    approved: false
+  });
 
       if (error) {
         console.error('Error submitting review', error);
