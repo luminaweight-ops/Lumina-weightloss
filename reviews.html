@@ -615,12 +615,12 @@
 
       console.log("review insert result:", { data, error });
 
-      if (error) {
-        console.error("Error submitting review", error);
-        revStatus.textContent =
-          "Something went wrong submitting your review. Please try again.";
-        revStatus.classList.remove("text-success");
-        revStatus.classList.add("text-danger");
+     if (error) {
+  console.error("Error submitting review", error);
+  revStatus.textContent =
+    "Something went wrong submitting your review: " + (error.message || "");
+  revStatus.classList.remove("text-success");
+  revStatus.classList.add("text-danger");
       } else {
         reviewForm.reset();
         revStatus.textContent =
