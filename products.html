@@ -207,6 +207,40 @@
       margin-top: 10px;
     }
 
+    /* INFO CARDS / SUPPORT SECTION */
+    .info-card {
+      border-radius: 20px;
+      background: #ffffff;
+      padding: 20px 18px;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+    }
+    .info-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(34, 197, 94, 0.08);
+      color: #15803d;
+      font-size: 1.1rem;
+    }
+    .btn-info-link {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border: 0;
+      background: transparent;
+      color: #0f766e;
+      padding: 0;
+      text-decoration: none;
+    }
+    .btn-info-link:hover {
+      text-decoration: underline;
+      color: #115e59;
+    }
+
     /* CART SIDEBAR */
     .cart-sidebar {
       height: 100vh;
@@ -341,6 +375,10 @@
           Select the vial or pen strength that fits your current phase. 
           All products are supplied for <strong>research use only</strong>.
         </p>
+        <p class="text-muted small mt-2">
+          <strong>Every pen includes 10 sterile pen heads.</strong><br>
+          <strong>Every vial is supplied pre-reconstituted and includes 10 sterile syringes for laboratory use.</strong>
+        </p>
       </div>
 
       <div id="all-products-status" class="text-center text-muted mb-3">
@@ -350,6 +388,7 @@
       <div class="row g-4" id="all-products-list"></div>
     </div>
   </section>
+
   <!-- INFO / DOSAGE GUIDE SECTION -->
   <section id="info-cards" class="py-5">
     <div class="container">
@@ -374,7 +413,7 @@
               How multi-dose pens are typically prepared and used in research settings,
               with clear, simple step-style guidance.
             </p>
-            <a href="pen-instructions.html" class="btn btn-info-link">Read now</a>
+            <a href="pen-instructions.html" class="btn-info-link">Read now</a>
           </div>
         </div>
 
@@ -389,7 +428,7 @@
               How many units per mg? Example once-weekly research protocols for
               Tirzepatide and Retatrutide. For <strong>research calculations only</strong>.
             </p>
-            <a href="dosage-guide.html" class="btn btn-info-link">View guide</a>
+            <a href="dosage-guide.html" class="btn-info-link">View guide</a>
           </div>
         </div>
 
@@ -404,7 +443,7 @@
               Read how other clients have found the ordering process, shipping speed
               and support from Lumina Weight.
             </p>
-            <a href="reviews.html" class="btn btn-info-link">Read reviews</a>
+            <a href="reviews.html" class="btn-info-link">Read reviews</a>
           </div>
         </div>
 
@@ -419,12 +458,13 @@
               When orders dispatch, typical delivery times, packaging details and
               tracking information for UK shipments.
             </p>
-            <a href="shipping.html" class="btn btn-info-link">Learn more</a>
+            <a href="shipping.html" class="btn-info-link">Learn more</a>
           </div>
         </div>
       </div>
     </div>
   </section>
+
   <footer class="text-center">
     <div class="container">
       <p class="mb-0">
@@ -567,6 +607,17 @@
           ? (p.name.includes('Pen') ? 'RETATRUTIDE PEN' : 'RETATRUTIDE VIAL')
           : (p.name.includes('Pen') ? 'TIRZEPATIDE PEN' : 'TIRZEPATIDE VIAL');
 
+      const baseDesc =
+        p.name.includes('Tirzepatide')
+          ? 'Dual GIP/GLP-1 research agonist for appetite and glucose control.'
+          : p.name.includes('Retatrutide')
+            ? 'Multi-receptor research agonist for aggressive weight management.'
+            : 'Weight-management research peptide.';
+
+      const extraInfo = p.name.includes('Pen')
+        ? ' Each pen includes 10 sterile pen heads for laboratory research use.'
+        : ' Each vial is supplied pre-reconstituted and includes 10 sterile syringes for laboratory research use.';
+
       return `
         <div class="col-md-3">
           <div class="position-relative h-100 product-card ${p.stock===0?'out-of-stock':''}" onclick="${p.stock>0?'openModal('+i+')':''}">
@@ -577,13 +628,7 @@
                 <div class="text-uppercase text-xs text-muted" style="font-size: .75rem;">${typeLabel}</div>
                 <div class="product-name">${p.name}</div>
                 <div class="text-muted" style="font-size:0.85rem;">
-                  ${
-                    p.name.includes('Tirzepatide')
-                      ? 'Dual GIP/GLP-1 research agonist for appetite and glucose control.'
-                      : p.name.includes('Retatrutide')
-                        ? 'Multi-receptor research agonist for aggressive weight management.'
-                        : 'Weight-management research peptide.'
-                  }
+                  ${baseDesc + extraInfo}
                 </div>
               </div>
               <div class="d-flex justify-content-between align-items-center mt-2">
@@ -640,6 +685,10 @@
 
     currentProduct = p;
 
+    const accessoriesLine = p.name.includes('Pen')
+      ? 'Each pen includes 10 sterile pen heads for laboratory research use.'
+      : 'Each vial is supplied pre-reconstituted and includes 10 sterile syringes for laboratory research use.';
+
     let modal = document.getElementById('productModal');
     if (!modal) {
       // lazy-create modal if not present
@@ -684,16 +733,22 @@
       descEl.innerHTML = `
         <p><strong>Tirzepatide</strong> is a dual <strong>GIP/GLP-1 receptor agonist</strong> widely studied in metabolic and weight-management research.</p>
         <p>Typically used for protocols focused on <strong>appetite control, insulin sensitivity and blood-glucose regulation</strong>.</p>
+        <p><strong>${accessoriesLine}</strong></p>
         <p class="mb-1"><em>For research use only. Not for human consumption.</em></p>
       `;
     } else if (p.name.includes('Retatrutide')) {
       descEl.innerHTML = `
         <p><strong>Retatrutide</strong> is an advanced <strong>multi-receptor agonist</strong> researched for aggressive weight-management strategies.</p>
         <p>Often used where <strong>rapid fat loss and metabolic reset</strong> are the focus.</p>
+        <p><strong>${accessoriesLine}</strong></p>
         <p class="mb-1"><em>For research use only. Not for human consumption.</em></p>
       `;
     } else {
-      descEl.textContent = 'Weight-management research peptide. For laboratory research only.';
+      descEl.innerHTML = `
+        <p>Weight-management research peptide for controlled laboratory studies.</p>
+        <p><strong>${accessoriesLine}</strong></p>
+        <p class="mb-1"><em>For research use only. Not for human consumption.</em></p>
+      `;
     }
 
     document.getElementById('modalQty').value = 1;
