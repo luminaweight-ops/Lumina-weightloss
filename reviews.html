@@ -587,16 +587,33 @@
       revSubmitBtn.textContent = 'Submitting…';
       revStatus.textContent = '';
 
-      const { error } = await supabaseClient
-  .from('Reviews')
-  .insert({
-    name: name || "Anonymous",
-    email: "not_provided@luminaweight.xyz",
-    product_name: "General Store Review",
-    rating: rating,
-    review_text: message,
-    approved: false
-  });
+     const { data, error } = await supabaseClient
+  .from("Reviews")
+  .insert([
+    {
+      name,
+      rating,
+      message,
+      is_published: false // goes to admin first
+    }
+  ])
+  .select(); // ask Supabase to return the inserted row
+
+console.log("review insert result:", { data, error });
+
+if (error) {
+  console.error("Error submitting review", error);
+  revStatus.textContent =
+    "Something went wrong submitting your review. Please try again.";
+  revStatus.classList.remove("text-success");
+  revStatus.classList.add("text-danger");
+} else {
+  reviewForm.reset();
+  revStatus.textContent =
+    "Thanks! Your review has been submitted for approval.";
+  revStatus.classList.remove("text-danger");
+  revStatus.classList.add("text-success");
+}
 
       if (error) {
         console.error('Error submitting review', error);
