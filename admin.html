@@ -312,14 +312,14 @@
 
   // ------- REVIEWS MODERATION (PENDING ONLY) -------
 
-// ------- REVIEWS MODERATION (PENDING ONLY) -------
+// ------- REVIEWS MODERATION (ALL REVIEWS + PENDING FLAG) -------
 
 async function loadPendingReviews() {
-  reviewsStatus.textContent = "Loading pending reviews…";
+  reviewsStatus.textContent = "Loading reviews…";
 
   const { data, error } = await supabaseClient
     .from("Reviews")
-    .select("*")                    // <-- no specific column list
+    .select("*")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -329,34 +329,26 @@ async function loadPendingReviews() {
   }
 
   if (!data || data.length === 0) {
-    reviewsStatus.textContent = "No pending reviews 🎉";
+    reviewsStatus.textContent = "No reviews yet.";
     reviewsEl.innerHTML = "";
     return;
   }
 
-  // Work out which ones are actually "pending"
-  const pending = data.filter((r) => {
-    // if is_published exists, use that
+  // Work out how many are pending based on whatever flags exist
+  const pendingCount = data.filter((r) => {
     if ("is_published" in r && typeof r.is_published === "boolean") {
       return !r.is_published;
     }
-    // else if approved exists, use that
     if ("approved" in r && typeof r.approved === "boolean") {
       return !r.approved;
     }
-    // if neither flag exists, treat as pending
+    // no flag at all? treat as pending
     return true;
-  });
+  }).length;
 
-  if (pending.length === 0) {
-    reviewsStatus.textContent = "No pending reviews 🎉";
-    reviewsEl.innerHTML = "";
-    return;
-  }
+  reviewsStatus.textContent = `${data.length} review(s) • ${pendingCount} pending`;
 
-  reviewsStatus.textContent = `${pending.length} pending review(s)`;
-
-  reviewsEl.innerHTML = pending
+  reviewsEl.innerHTML = data
     .map((review) => {
       const created = review.created_at
         ? new Date(review.created_at).toLocaleString()
@@ -378,6 +370,18 @@ async function loadPendingReviews() {
         review.body ||
         "";
 
+      // infer status label
+      let statusLabel = "Pending";
+      let isPublished = false;
+
+      if ("is_published" in review && typeof review.is_published === "boolean") {
+        isPublished = review.is_published;
+      } else if ("approved" in review && typeof review.approved === "boolean") {
+        isPublished = review.approved;
+      }
+
+      if (isPublished) statusLabel = "Published";
+
       return `
         <div class="review-card">
           <div class="d-flex justify-content-between">
@@ -385,13 +389,22 @@ async function loadPendingReviews() {
               <strong>${name}</strong>
               <div class="my-1">${stars}</div>
               <p class="mb-1">${message}</p>
-              <small class="review-meta">${created}</small>
+              <small class="review-meta">${created}</small><br>
+              <span class="badge bg-${isPublished ? "success" : "warning"} mt-1">
+                ${statusLabel}
+              </span>
             </div>
             <div class="text-end" style="min-width: 140px;">
-              <button class="btn btn-sm btn-success mb-1"
-                onclick="publishReview('${review.id}')">
-                ✅ Publish
-              </button>
+              ${
+                isPublished
+                  ? `<button class="btn btn-sm btn-secondary mb-1" disabled>
+                       ✅ Published
+                     </button>`
+                  : `<button class="btn btn-sm btn-success mb-1"
+                       onclick="publishReview('${review.id}')">
+                       ✅ Publish
+                     </button>`
+              }
               <button class="btn btn-sm btn-outline-danger"
                 onclick="deleteReview('${review.id}')">
                 🗑 Delete
@@ -407,7 +420,7 @@ async function loadPendingReviews() {
 async function publishReview(id) {
   if (!confirm("Publish this review?")) return;
 
-  // Try to support both schemas: is_published and/or approved
+  // Try to support both is_published and approved schemas
   const { error } = await supabaseClient
     .from("Reviews")
     .update({ is_published: true, approved: true })
@@ -416,6 +429,23 @@ async function publishReview(id) {
   if (error) {
     console.error("Error publishing review", error);
     alert("Failed to publish review – check console.");
+    return;
+  }
+
+  loadPendingReviews();
+}
+
+async function deleteReview(id) {
+  if (!confirm("Delete this review permanently?")) return;
+
+  const { error } = await supabaseClient
+    .from("Reviews")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error deleting review", error);
+    alert("Could not delete review – check console.");
     return;
   }
 
