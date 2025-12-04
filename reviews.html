@@ -445,31 +445,31 @@
     // ------- SEEDED REAL REVIEWS (your 5 customers) -------
     const seededReviews = [
       {
-        name: "Sarah J., Manchester",
+        name: "Sarah",
         rating: 5,
         message: `Started my research protocol with the 10mg Tirzepatide vial, and Lumina's made it seamless. Discreet packaging arrived in 2 days, no fuss with bank transfer, email instructions were crystal clear. Already noticing better appetite control in my trials; down 1.5 stone in a month. Support team's dosing advice via email was spot on for a newbie. Highly recommend for UK researchers – professional and reliable!`,
         created_label: "05 Nov 2025"
       },
       {
-        name: "Mike T., London",
+        name: "Mike",
         rating: 5,
         message: `Grabbed a couple of Retatrutide pens for metabolic studies, and the quality is top notch. The guidance email helped nail the weekly dosing. Price point is fair for research grade stuff, and delivery was stealthy as promised. Solid results in glucose regulation data. Lumina's my go to now – efficient and trustworthy.`,
         created_label: "28 Oct 2025"
       },
       {
-        name: "Emma R., Edinburgh",
+        name: "Emma",
         rating: 5,
         message: `As a busy mum dipping into weight management research, Lumina's been a game changer. Ordered the Tirzepatide 10mg vial, and the once weekly sub-Q setup fits perfectly. Fantastic support, replied to my protocol query in under 24 hours with tailored tips. Packaging was unmarked, and I've hit steady progress (over 2 stone lost). Ethical, UK based, and effective – five stars all day!`,
         created_label: "05 Sept 2025"
       },
       {
-        name: "David K., Birmingham",
+        name: "David",
         rating: 5,
         message: `Switched to Lumina after sketchy overseas suppliers, and wow what a difference. The vials arrived lab fresh, with clear labels and reconstitution notes. Bank transfer was secure and straightforward – no card details needed, which I love for privacy. Early trial data shows strong insulin sensitivity improvements. If you're serious about GLP-1 research, start here – discreet, fast, and legit.`,
         created_label: "20 Sept 2025"
       },
       {
-        name: "Lisa M., Bristol",
+        name: "Lisa",
         rating: 5,
         message: `First-time buyer for Tirzepatide pens, and Lumina exceeded expectations. Super helpful email on starting doses for my bodyweight reduction studies, kept it simple and science-backed. Shipped next day, and the product's purity is evident in the consistent results. Affordable at that price, with zero hassle. Grateful for a UK supplier that's all about quality and support!`,
         created_label: "10 Nov 2025"
@@ -493,7 +493,7 @@
 
       try {
         const res = await supabaseClient
-          .from('Reviews')
+          .from('reviews')
           .select('*')
           .eq('is_published', true)
           .order('created_at', { ascending: false });
@@ -588,7 +588,7 @@
       revStatus.textContent = '';
 
       const { error } = await supabaseClient
-        .from('Reviews')
+        .from('reviews')
         .insert({
           name,
           rating,
