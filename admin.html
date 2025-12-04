@@ -46,11 +46,6 @@
     margin-bottom: 12px;
   }
 
-  .badge-status {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-  }
-
   .review-meta {
     font-size: 0.85rem;
     color: #6b7280;
@@ -58,7 +53,7 @@
 </style>
 </head>
 <body>
-  <!-- TRUST / DELIVERY BAR -->
+<!-- TRUST BAR -->
 <div id="trust-bar">
   <div class="container d-flex justify-content-center gap-4 flex-wrap">
     <span>🚚 <strong>Next Day Delivery</strong> on orders before <strong>3PM</strong></span>
@@ -71,7 +66,6 @@
 <!-- NAV -->
 <nav class="navbar navbar-dark navbar-expand-lg">
   <div class="container">
-    <!-- Brand links back to homepage -->
     <a class="navbar-brand" href="index.html#home">
       🌙 Lumina Admin
     </a>
@@ -106,7 +100,7 @@
 <!-- CONTENT -->
 <div class="container mt-4">
 
-  <!-- ORDERS SECTION -->
+  <!-- ORDERS SECTION (unchanged, use your existing orders code if you like) -->
   <div class="section-card mb-4">
     <h3>Orders</h3>
     <p id="admin-status" class="text-muted">Checking access…</p>
@@ -122,7 +116,6 @@
   </div>
 </div>
 
-<!-- Libs: Supabase + EmailJS + Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -132,18 +125,16 @@
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZXRucWhmamZ4YnFpdXFldm5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NjkzMzAsImV4cCI6MjA4MDI0NTMzMH0.JIrgLIwWIA5Gwu9K4BsgS0Y_jyax2G6irqkaf35aPys";
 
   const ADMIN_EMAIL = "luminaweight@gmail.com";
-
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // EmailJS init (for shipped emails)
+  // EmailJS init (for shipped emails on orders)
   (function () {
     try {
       if (window.emailjs) {
         emailjs.init({ publicKey: "uZOuTrBdIAc6AmKjo" });
-        console.log("✅ EmailJS initialized");
       }
     } catch (e) {
-      console.error("❌ EmailJS init failed", e);
+      console.error("EmailJS init failed", e);
     }
   })();
 
@@ -155,7 +146,6 @@
   const reviewsStatus = document.getElementById("reviews-status");
   const reviewsEl     = document.getElementById("reviews-list");
 
-  // Cache orders by id
   const ordersCache = {};
 
   function badge(status) {
@@ -192,7 +182,7 @@
       customer.name || order.customer_name || order.name || "Customer";
 
     if (!toEmail) {
-      console.warn("❌ No email found on order, cannot send shipped email");
+      console.warn("No email found on order");
       return;
     }
 
@@ -208,18 +198,10 @@
         order_items: items,
         order_total: total,
       })
-      .then((res) => {
-        console.log("✅ Shipped email sent", res.status, res.text);
-      })
-      .catch((err) => {
-        console.error("❌ Shipped email failed", err);
-        alert("Shipped email failed – check console for details.");
-      });
+      .catch((err) => console.error("Shipped email failed", err));
   }
 
   async function updateStatus(id, value) {
-    console.log("🔄 Updating status for", id, "to", value);
-
     const { error } = await supabaseClient
       .from("Orders")
       .update({ status: value })
@@ -237,8 +219,6 @@
 
     if (value === "Shipped" && ordersCache[id]) {
       sendShippedEmail(ordersCache[id]);
-    } else if (value === "Shipped") {
-      console.warn("⚠️ No cached order found for id:", id);
     }
   }
 
@@ -261,9 +241,7 @@
 
     statusEl.textContent = `${orders.length} orders found`;
 
-    orders.forEach((o) => {
-      ordersCache[o.id] = o;
-    });
+    orders.forEach((o) => { ordersCache[o.id] = o; });
 
     ordersEl.innerHTML = orders
       .map((order) => {
@@ -310,49 +288,45 @@
       .join("");
   }
 
-  // ------- REVIEWS MODERATION (PENDING ONLY) -------
+  // ------- REVIEWS MODERATION -------
 
-// ------- REVIEWS MODERATION (ALL REVIEWS + PENDING FLAG) -------
+  async function loadPendingReviews() {
+    reviewsStatus.textContent = "Loading pending reviews…";
 
-// ------- REVIEWS MODERATION (PENDING ONLY) -------
+    const { data, error } = await supabaseClient
+      .from("Reviews")
+      .select("id, name, rating, review_text, approved, created_at")
+      .eq("approved", false)
+      .order("created_at", { ascending: false });
 
-async function loadPendingReviews() {
-  reviewsStatus.textContent = "Loading pending reviews…";
+    if (error) {
+      console.error("Error loading reviews", error);
+      reviewsStatus.textContent = "Could not load reviews.";
+      return;
+    }
 
-  const { data, error } = await supabaseClient
-    .from("Reviews")
-    .select("id, name, rating, review_text, approved, created_at")
-    .eq("approved", false)
-    .order("created_at", { ascending: false });
+    if (!data || data.length === 0) {
+      reviewsStatus.textContent = "No pending reviews 🎉";
+      reviewsEl.innerHTML = "";
+      return;
+    }
 
-  if (error) {
-    console.error("Error loading reviews", error);
-    reviewsStatus.textContent = "Could not load reviews.";
-    return;
-  }
+    reviewsStatus.textContent = `${data.length} review(s) · 1 pending`;
 
-  if (!data || data.length === 0) {
-    reviewsStatus.textContent = "No pending reviews 🎉";
-    reviewsEl.innerHTML = "";
-    return;
-  }
+    reviewsEl.innerHTML = data
+      .map((review) => {
+        const created = review.created_at
+          ? new Date(review.created_at).toLocaleString()
+          : "";
 
-  reviewsStatus.textContent = `${data.length} pending review(s)`;
+        const stars = review.rating
+          ? "★".repeat(review.rating) + "☆".repeat(5 - review.rating)
+          : "";
 
-  reviewsEl.innerHTML = data
-    .map((review) => {
-      const created = review.created_at
-        ? new Date(review.created_at).toLocaleString()
-        : "";
+        const name = review.name || "Anonymous";
+        const message = review.review_text || "";
 
-      const stars = review.rating
-        ? "★".repeat(review.rating) + "☆".repeat(5 - review.rating)
-        : "";
-
-      const name = review.name || "Anonymous";
-      const message = review.review_text || "";
-
-      return `
+        return `
         <div class="review-card">
           <div class="d-flex justify-content-between">
             <div>
@@ -374,84 +348,45 @@ async function loadPendingReviews() {
           </div>
         </div>
       `;
-    })
-    .join("");
-}
-
-async function publishReview(id) {
-  if (!confirm("Publish this review?")) return;
-
-  const { error } = await supabaseClient
-    .from("Reviews")
-    .update({ approved: true })   // ✅ use approved
-    .eq("id", id);
-
-  if (error) {
-    console.error("Error publishing review", error);
-    alert("Failed to publish review – check console.");
-    return;
+      })
+      .join("");
   }
 
-  loadPendingReviews();
-}
+  async function publishReview(id) {
+    if (!confirm("Publish this review?")) return;
 
-async function deleteReview(id) {
-  if (!confirm("Delete this review permanently?")) return;
+    const { error } = await supabaseClient
+      .from("Reviews")
+      .update({ approved: true })
+      .eq("id", id);
 
-  const { error } = await supabaseClient
-    .from("Reviews")
-    .delete()
-    .eq("id", id);
+    if (error) {
+      console.error("Error publishing review", error);
+      alert("Failed to publish review – check console.");
+      return;
+    }
 
-  if (error) {
-    console.error("Error deleting review", error);
-    alert("Could not delete review – check console.");
-    return;
+    loadPendingReviews();
   }
 
-  loadPendingReviews();
-}
+  async function deleteReview(id) {
+    if (!confirm("Delete this review permanently?")) return;
 
-// expose for inline onclick
-window.publishReview = publishReview;
-window.deleteReview = deleteReview;
+    const { error } = await supabaseClient
+      .from("Reviews")
+      .delete()
+      .eq("id", id);
 
-async function deleteReview(id) {
-  if (!confirm("Delete this review permanently?")) return;
+    if (error) {
+      console.error("Error deleting review", error);
+      alert("Could not delete review – check console.");
+      return;
+    }
 
-  const { error } = await supabaseClient
-    .from("Reviews")
-    .delete()
-    .eq("id", id);
-
-  if (error) {
-    console.error("Error deleting review", error);
-    alert("Could not delete review – check console.");
-    return;
+    loadPendingReviews();
   }
 
-  loadPendingReviews();
-}
-
-async function deleteReview(id) {
-  if (!confirm("Delete this review permanently?")) return;
-
-  const { error } = await supabaseClient
-    .from("Reviews")
-    .delete()
-    .eq("id", id);
-
-  if (error) {
-    console.error("Error deleting review", error);
-    alert("Could not delete review – check console.");
-    return;
-  }
-
-  loadPendingReviews();
-}
-
-  // ------- INIT + AUTH CHECK -------
-
+  // INIT + AUTH CHECK
   async function init() {
     statusEl.textContent = "Checking access…";
 
@@ -459,7 +394,7 @@ async function deleteReview(id) {
       await supabaseClient.auth.getSession();
 
     if (sessionError || !sessionData?.session?.user) {
-      console.warn("❌ No active session", sessionError);
+      console.warn("No active session", sessionError);
       window.location.href = "index.html";
       return;
     }
@@ -484,13 +419,11 @@ async function deleteReview(id) {
     location.href = "index.html";
   };
 
-  // Expose functions for inline onclick
   window.updateStatus   = updateStatus;
   window.publishReview  = publishReview;
   window.deleteReview   = deleteReview;
 
   init();
 </script>
-
 </body>
 </html>
