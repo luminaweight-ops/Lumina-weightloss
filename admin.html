@@ -314,12 +314,15 @@
 
 // ------- REVIEWS MODERATION (ALL REVIEWS + PENDING FLAG) -------
 
+// ------- REVIEWS MODERATION (PENDING ONLY) -------
+
 async function loadPendingReviews() {
-  reviewsStatus.textContent = "Loading reviews…";
+  reviewsStatus.textContent = "Loading pending reviews…";
 
   const { data, error } = await supabaseClient
     .from("Reviews")
-    .select("*")
+    .select("id, name, rating, review_text, approved, created_at")
+    .eq("approved", false)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -329,24 +332,12 @@ async function loadPendingReviews() {
   }
 
   if (!data || data.length === 0) {
-    reviewsStatus.textContent = "No reviews yet.";
+    reviewsStatus.textContent = "No pending reviews 🎉";
     reviewsEl.innerHTML = "";
     return;
   }
 
-  // Work out how many are pending based on whatever flags exist
-  const pendingCount = data.filter((r) => {
-    if ("is_published" in r && typeof r.is_published === "boolean") {
-      return !r.is_published;
-    }
-    if ("approved" in r && typeof r.approved === "boolean") {
-      return !r.approved;
-    }
-    // no flag at all? treat as pending
-    return true;
-  }).length;
-
-  reviewsStatus.textContent = `${data.length} review(s) • ${pendingCount} pending`;
+  reviewsStatus.textContent = `${data.length} pending review(s)`;
 
   reviewsEl.innerHTML = data
     .map((review) => {
@@ -354,33 +345,12 @@ async function loadPendingReviews() {
         ? new Date(review.created_at).toLocaleString()
         : "";
 
-      const rating = review.rating || 0;
-      const stars = rating
-        ? "★".repeat(rating) + "☆".repeat(5 - rating)
+      const stars = review.rating
+        ? "★".repeat(review.rating) + "☆".repeat(5 - review.rating)
         : "";
 
-      const name =
-        review.name ||
-        review.first_name ||
-        "Anonymous";
-
-      const message =
-        review.message ||
-        review.review_text ||
-        review.body ||
-        "";
-
-      // infer status label
-      let statusLabel = "Pending";
-      let isPublished = false;
-
-      if ("is_published" in review && typeof review.is_published === "boolean") {
-        isPublished = review.is_published;
-      } else if ("approved" in review && typeof review.approved === "boolean") {
-        isPublished = review.approved;
-      }
-
-      if (isPublished) statusLabel = "Published";
+      const name = review.name || "Anonymous";
+      const message = review.review_text || "";
 
       return `
         <div class="review-card">
@@ -389,22 +359,13 @@ async function loadPendingReviews() {
               <strong>${name}</strong>
               <div class="my-1">${stars}</div>
               <p class="mb-1">${message}</p>
-              <small class="review-meta">${created}</small><br>
-              <span class="badge bg-${isPublished ? "success" : "warning"} mt-1">
-                ${statusLabel}
-              </span>
+              <small class="review-meta">${created}</small>
             </div>
             <div class="text-end" style="min-width: 140px;">
-              ${
-                isPublished
-                  ? `<button class="btn btn-sm btn-secondary mb-1" disabled>
-                       ✅ Published
-                     </button>`
-                  : `<button class="btn btn-sm btn-success mb-1"
-                       onclick="publishReview('${review.id}')">
-                       ✅ Publish
-                     </button>`
-              }
+              <button class="btn btn-sm btn-success mb-1"
+                onclick="publishReview('${review.id}')">
+                ✅ Publish
+              </button>
               <button class="btn btn-sm btn-outline-danger"
                 onclick="deleteReview('${review.id}')">
                 🗑 Delete
@@ -420,10 +381,9 @@ async function loadPendingReviews() {
 async function publishReview(id) {
   if (!confirm("Publish this review?")) return;
 
-  // Try to support both is_published and approved schemas
   const { error } = await supabaseClient
     .from("Reviews")
-    .update({ is_published: true, approved: true })
+    .update({ approved: true })   // ✅ use approved
     .eq("id", id);
 
   if (error) {
@@ -434,6 +394,27 @@ async function publishReview(id) {
 
   loadPendingReviews();
 }
+
+async function deleteReview(id) {
+  if (!confirm("Delete this review permanently?")) return;
+
+  const { error } = await supabaseClient
+    .from("Reviews")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error deleting review", error);
+    alert("Could not delete review – check console.");
+    return;
+  }
+
+  loadPendingReviews();
+}
+
+// expose for inline onclick
+window.publishReview = publishReview;
+window.deleteReview = deleteReview;
 
 async function deleteReview(id) {
   if (!confirm("Delete this review permanently?")) return;
