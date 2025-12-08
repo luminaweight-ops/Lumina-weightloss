@@ -424,6 +424,39 @@
   window.deleteReview   = deleteReview;
 
   init();
+    // ------- INACTIVITY LOGOUT -------
+
+  // time in ms (e.g. 15 minutes)
+  const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
+
+  let inactivityTimer;
+
+  function resetInactivityTimer() {
+    if (inactivityTimer) clearTimeout(inactivityTimer);
+
+    inactivityTimer = setTimeout(async () => {
+      try {
+        console.log("Logging out due to inactivity...");
+        await supabaseClient.auth.signOut();
+
+        // If you also want to clear cart etc., do it here:
+        // localStorage.removeItem("cart");
+
+        // Redirect wherever makes sense
+        window.location.href = "account.html?timeout=1";
+      } catch (e) {
+        console.error("Error during inactivity logout", e);
+      }
+    }, INACTIVITY_TIMEOUT);
+  }
+
+  // Any of these events = "user is active", so reset the timer
+  ["click", "mousemove", "keydown", "scroll", "touchstart"].forEach((evt) => {
+    window.addEventListener(evt, resetInactivityTimer, { passive: true });
+  });
+
+  // Start the timer when the page loads
+  resetInactivityTimer();
 </script>
 </body>
 </html>
