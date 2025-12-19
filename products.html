@@ -148,6 +148,7 @@
     .pill-popular { background: #22c55e; }
     .pill-premium { background: #6366f1; }
     .pill-best-value { background: #f97316; }
+    .pill-wolverine { background: #111827; } /* ✅ Wolverine badge */
 
     .stock { font-size: 0.9rem; margin-top: 4px; }
     .btn-add { border-radius: 999px; font-weight: 600; padding-inline: 24px; margin-top: 10px; }
@@ -501,6 +502,13 @@
     let currentProduct = null;
 
     function computeBadge(p) {
+      const name = (p.name || '').toLowerCase();
+
+      // ✅ Wolverine badge for blend
+      if (name.includes('bpc-157') || name.includes('tb500')) {
+        return { text: 'Wolverine Stack', class: 'pill-wolverine' };
+      }
+
       if (p.name?.includes('20mg')) return { text: 'Most Popular', class: 'pill-popular' };
       if (p.price >= 130) return { text: 'Premium', class: 'pill-premium' };
       return null;
@@ -537,7 +545,7 @@
               : 'Research peptide product.';
 
         const extraInfo = isBlend
-          ? ' Supplied as a research vial for laboratory use.'
+          ? ' Supplied as a research vial for laboratory use. Includes <strong>3ml BAC water</strong> and <strong>10 sterile syringes</strong>.'
           : p.name.includes('Pen')
             ? ' Each pen includes 10 sterile pen heads for laboratory research use.'
             : ' Each vial is supplied pre-reconstituted and includes 10 sterile syringes for laboratory research use.';
@@ -653,14 +661,14 @@
       document.getElementById('modalPrice').textContent = `£${Number(p.price || 0).toFixed(2)}`;
       document.getElementById('modalStock').innerHTML   = `In stock – ${p.stock} units`;
 
-      const descEl = document.getElementById('modalDescription'); /* ✅ FIX */
+      const descEl = document.getElementById('modalDescription');
       const isBlend = (p.name || '').toLowerCase().includes('bpc-157') || (p.name || '').toLowerCase().includes('tb500');
 
       if (isBlend) {
         descEl.innerHTML = `
           <p><strong>BPC-157 + TB500</strong> is a commonly used <strong>recovery peptide blend</strong> in laboratory research settings.</p>
           <p>Typically referenced in studies around <strong>tendon/ligament support, connective tissue repair, inflammation response</strong> and recovery signalling.</p>
-          <p><strong>Supplied as a research vial.</strong></p>
+          <p><strong>Supplied with 3ml BAC water and 10 sterile syringes for laboratory research use.</strong></p>
           <p class="mb-1"><em>For research use only. Not for human consumption.</em></p>
         `;
       } else if (p.name.includes('Tirzepatide')) {
