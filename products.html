@@ -633,27 +633,33 @@
 
     listEl.innerHTML = products.map((p, i) => {
       const badge = computeBadge(p);
-      const typeLabel =
-        p.name.includes('Retatrutide')
+            const isBlend = (p.name || '').toLowerCase().includes('bpc-157') || (p.name || '').toLowerCase().includes('tb500');
+
+      const typeLabel = isBlend
+        ? 'RECOVERY PEPTIDE BLEND'
+        : p.name.includes('Retatrutide')
           ? (p.name.includes('Pen') ? 'RETATRUTIDE PEN' : 'RETATRUTIDE VIAL')
           : (p.name.includes('Pen') ? 'TIRZEPATIDE PEN' : 'TIRZEPATIDE VIAL');
 
-      const baseDesc =
-        p.name.includes('Tirzepatide')
+      const baseDesc = isBlend
+        ? 'BPC-157 + TB500 research blend commonly used in recovery, tendon/ligament and tissue-repair studies.'
+        : p.name.includes('Tirzepatide')
           ? 'Dual GIP/GLP-1 research agonist for appetite and glucose control.'
           : p.name.includes('Retatrutide')
             ? 'Multi-receptor research agonist for aggressive weight management.'
-            : 'Weight-management research peptide.';
+            : 'Research peptide product.';
 
-      const extraInfo = p.name.includes('Pen')
-        ? ' Each pen includes 10 sterile pen heads for laboratory research use.'
-        : ' Each vial is supplied pre-reconstituted and includes 10 sterile syringes for laboratory research use.';
+      const extraInfo = isBlend
+        ? ' Supplied as a research vial. Example research handling guidance only.'
+        : p.name.includes('Pen')
+          ? ' Each pen includes 10 sterile pen heads for laboratory research use.'
+          : ' Each vial is supplied pre-reconstituted and includes 10 sterile syringes for laboratory research use.';
 
       return `
         <div class="col-md-3">
           <div class="position-relative h-100 product-card ${p.stock===0?'out-of-stock':''}" onclick="${p.stock>0?'openModal('+i+')':''}">
             ${badge ? `<span class="pill-label ${badge.class}">${badge.text}</span>` : ''}
-            <img src="${p.image || ''}" class="w-100 p-4" alt="${p.name}">
+            <img src="${p.image ? encodeURI(p.image) : ''}" class="w-100 p-4" alt="${p.name}">
             <div class="product-body d-flex flex-column">
               <div class="text-start">
                 <div class="text-uppercase text-xs text-muted" style="font-size: .75rem;">${typeLabel}</div>
@@ -759,8 +765,16 @@
     document.getElementById('modalPrice').textContent = `£${Number(p.price || 0).toFixed(2)}`;
     document.getElementById('modalStock').innerHTML   = `In stock – ${p.stock} units`;
 
-    const descEl = document.getElementById('modalDescription');
-    if (p.name.includes('Tirzepatide')) {
+        const isBlend = (p.name || '').toLowerCase().includes('bpc-157') || (p.name || '').toLowerCase().includes('tb500');
+
+    if (isBlend) {
+      descEl.innerHTML = `
+        <p><strong>BPC-157 + TB500</strong> is a commonly used <strong>recovery peptide blend</strong> in laboratory research settings.</p>
+        <p>Typically referenced in studies around <strong>tendon/ligament support, connective tissue repair, inflammation response</strong> and recovery signalling.</p>
+        <p><strong>Supplied as a research vial.</strong></p>
+        <p class="mb-1"><em>For research use only. Not for human consumption.</em></p>
+      `;
+    } else if (p.name.includes('Tirzepatide')) {
       descEl.innerHTML = `
         <p><strong>Tirzepatide</strong> is a dual <strong>GIP/GLP-1 receptor agonist</strong> widely studied in metabolic and weight-management research.</p>
         <p>Typically used for protocols focused on <strong>appetite control, insulin sensitivity and blood-glucose regulation</strong>.</p>
@@ -776,7 +790,7 @@
       `;
     } else {
       descEl.innerHTML = `
-        <p>Weight-management research peptide for controlled laboratory studies.</p>
+        <p>Research product for controlled laboratory studies.</p>
         <p><strong>${accessoriesLine}</strong></p>
         <p class="mb-1"><em>For research use only. Not for human consumption.</em></p>
       `;
