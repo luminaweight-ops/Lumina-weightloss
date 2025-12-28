@@ -161,7 +161,7 @@
         <p id="payment-discount" class="text-success small mb-3" style="display:none;"></p>
 
         <p class="mb-1">
-          Your payment reference: 
+          Your payment reference:
           <strong id="order-ref" class="text-primary fw-bold"></strong>
         </p>
         <p class="text-muted mb-0">
@@ -192,7 +192,6 @@
 
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 </script>
-  
 
 <script>
 let cart = [];
@@ -371,16 +370,17 @@ function getCartSummaryText() {
   return buildItemsText();
 }
 
-// ---------- SUPABASE ORDER SAVE ----------
+// ---------- SUPABASE ORDER SAVE (FIXED: saves for guests + logged-in) ----------
 async function saveOrderToSupabase(details) {
   try {
-    const { data, error } = await supabaseClient.auth.getUser();
-    if (error || !data || !data.user) {
-      console.log('No logged-in user, skipping Supabase order save.');
-      return;
+    // If user is logged in, store their user_id; otherwise null (guest checkout)
+    let userId = null;
+    try {
+      const { data: userData } = await supabaseClient.auth.getUser();
+      userId = userData?.user?.id || null;
+    } catch (e) {
+      userId = null;
     }
-
-    const user = data.user;
 
     const orderDetails = {
       customer: {
@@ -401,15 +401,21 @@ async function saveOrderToSupabase(details) {
       reference: details.ref
     };
 
+    const payload = {
+      user_id: userId,
+      total_amount: total,
+      status: 'Pending',
+      reference: details.ref,
+      details: orderDetails,
+
+      // OPTIONAL: only keep these if your Orders table has these columns:
+      customer_email: details.email,
+      customer_name: details.name
+    };
+
     const { error: insertError } = await supabaseClient
       .from('Orders')
-      .insert({
-        user_id: user.id,
-        total_amount: total,
-        status: 'Pending',
-        reference: details.ref,
-        details: orderDetails
-      });
+      .insert(payload);
 
     if (insertError) {
       console.error('Error saving order to Supabase:', insertError);
@@ -498,7 +504,7 @@ function sendAbandonedEmail(details, recoveryLink) {
 
   return emailjs.send(
     'service_i5zi096',
-    'template_guh3ord', // abandoned checkout template
+    'template_guh3ord',
     {
       to_email: details.email,
       customer_name: details.name || 'there',
@@ -582,7 +588,7 @@ document.getElementById('addressForm').onsubmit = async function(e) {
     sendAdminEmail(details);
     sendCustomerEmail(details);
 
-    // Save order to Supabase if user logged in
+    // Save order to Supabase for EVERYONE (guest + logged in)
     await saveOrderToSupabase(details);
 
     // Clear cart storage so basket is empty when back on main page
