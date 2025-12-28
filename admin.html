@@ -1,726 +1,462 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin | Lumina Weight</title>
 
-  <!-- SEO -->
-  <title>All Tirzepatide & Retatrutide Vials & Pens UK | Lumina Weight</title>
-  <meta name="description" content="Browse all Lumina Weight Tirzepatide & Retatrutide research products in the UK. 10mg–20mg vials and multi-dose pens for metabolic and weight-management studies. Discreet next-day UK dispatch — for laboratory research use only.">
-  <meta name="robots" content="index, follow">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <!-- Open Graph / Social -->
-  <meta property="og:title" content="All Tirzepatide & Retatrutide Vials & Pens UK | Lumina Weight">
-  <meta property="og:description" content="Full UK range of Tirzepatide & Retatrutide vials and pens for metabolic and weight-management research. Discreet packaging • Next-day dispatch • Research use only.">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://luminaweight.xyz/products.html">
-  <meta property="og:image" content="https://luminaweight.xyz/LuminaLogoBlack.png">
+<style>
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f3f4f6;
+  }
 
-  <!-- Optional canonical URL -->
-  <link rel="canonical" href="https://luminaweight.xyz/products.html">
+  .navbar {
+    background: #020617;
+  }
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  .navbar-brand {
+    color: #fff;
+    font-weight: 700;
+  }
 
-  <style>
-    :root {
-      --lw-mint: #22c55e;
-      --lw-mint-soft: #ecfdf5;
-      --lw-blue-soft: #e0f2fe;
-      --lw-purple-soft: #eef2ff;
-      --lw-dark: #0f172a;
-      --lw-muted: #64748b;
-      --lw-bg: #f3f4f6;
-    }
+  .navbar .nav-link {
+    color: #e5e7eb;
+  }
+  .navbar .nav-link:hover {
+    color: #ffffff;
+  }
 
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--lw-bg);
-      color: var(--lw-dark);
-      margin: 0;
-      padding-top: 80px;
-    }
+  .section-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    margin-bottom: 24px;
+  }
 
-    /* TRUST / DELIVERY BAR */
-    #trust-bar {
-      position: fixed;
-      top: 0;
-      width: 100%;
-      background: linear-gradient(90deg, #22c55e, #16a34a);
-      color: white;
-      font-size: 0.85rem;
-      font-weight: 600;
-      padding: 6px 0;
-      z-index: 1100;
-      text-align: center;
-    }
+  .order-card,
+  .review-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    margin-bottom: 12px;
+  }
 
-    #trust-bar span { white-space: nowrap; }
-
-    /* NAVBAR */
-    .navbar {
-      background: #ffffff !important;
-      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
-    }
-    .navbar.fixed-top { top: 32px; }
-
-    .navbar-brand img { height: 36px; margin-right: 10px; }
-    .navbar-brand span { font-weight: 700; font-size: 1.15rem; }
-    .nav-link { font-weight: 500; color: var(--lw-muted) !important; }
-    .nav-link.active, .nav-link:hover { color: var(--lw-dark) !important; }
-    .cart-icon { cursor: pointer; font-size: 1.5rem; color: var(--lw-dark); }
-
-    /* HERO */
-    .hero {
-      background: radial-gradient(circle at top left, var(--lw-mint-soft), #e0f2fe 40%, var(--lw-purple-soft) 100%);
-      padding: 120px 0 80px;
-    }
-    .hero-eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 14px;
-      border-radius: 999px;
-      background: rgba(34, 197, 94, 0.08);
-      color: #15803d;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-    .hero-eyebrow i { font-size: 0.9rem; }
-
-    .hero-title {
-      font-size: clamp(2.2rem, 4vw, 2.6rem);
-      font-weight: 800;
-      line-height: 1.1;
-      margin-top: 18px;
-    }
-    .hero-subtitle {
-      color: var(--lw-muted);
-      font-size: 1.0rem;
-      max-width: 650px;
-      margin: 16px auto 0;
-    }
-
-    /* PRODUCT GRID */
-    #products { padding: 60px 0 80px; }
-    .section-eyebrow {
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      font-size: 0.78rem;
-      color: #0f766e;
-      font-weight: 700;
-    }
-    .section-title { font-size: 2rem; font-weight: 800; }
-    .section-subtitle { color: var(--lw-muted); max-width: 560px; margin: 10px auto 0; }
-
-    .product-card {
-      border: 0;
-      border-radius: 24px;
-      background: #ffffff;
-      padding-top: 4px;
-      overflow: hidden;
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
-      transition: transform .2s ease, box-shadow .2s ease;
-      cursor: pointer;
-    }
-    .product-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 26px 60px rgba(15, 23, 42, 0.12);
-    }
-    .product-card.out-of-stock { opacity: 0.55; cursor: not-allowed; }
-    .product-card img { height: 200px; object-fit: contain; }
-
-    .product-body { padding: 1.5rem 1.6rem 1.6rem; }
-    .product-name { font-weight: 700; font-size: 1.05rem; margin-bottom: .15rem; }
-    .product-price { font-size: 1.3rem; font-weight: 800; color: #0f172a; }
-    .product-price span { font-size: .85rem; color: var(--lw-muted); font-weight: 500; }
-
-    .pill-label {
-      position: absolute;
-      top: 14px;
-      right: 16px;
-      padding: 4px 12px;
-      border-radius: 999px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #ffffff;
-    }
-    .pill-popular { background: #22c55e; }
-    .pill-premium { background: #6366f1; }
-    .pill-best-value { background: #f97316; }
-    .pill-wolverine { background: #111827; } /* ✅ Wolverine badge */
-
-    .stock { font-size: 0.9rem; margin-top: 4px; }
-    .btn-add { border-radius: 999px; font-weight: 600; padding-inline: 24px; margin-top: 10px; }
-
-    /* INFO CARDS */
-    .info-card {
-      border-radius: 20px;
-      background: #ffffff;
-      padding: 20px 18px;
-      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
-    }
-    .info-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 999px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(34, 197, 94, 0.08);
-      color: #15803d;
-      font-size: 1.1rem;
-    }
-    .btn-info-link {
-      font-size: 0.85rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      border: 0;
-      background: transparent;
-      color: #0f766e;
-      padding: 0;
-      text-decoration: none;
-    }
-    .btn-info-link:hover { text-decoration: underline; color: #115e59; }
-
-    /* CART SIDEBAR */
-    .cart-sidebar {
-      height: 100vh;
-      width: 420px;
-      position: fixed;
-      top: 0;
-      right: -420px;
-      background: #ffffff;
-      box-shadow: -10px 0 35px rgba(15, 23, 42, 0.18);
-      transition: 0.35s;
-      z-index: 9999;
-      overflow-y: auto;
-    }
-    .cart-sidebar.open { right: 0; }
-
-    .overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.45);
-      z-index: 9998;
-    }
-    .overlay.show { display: block; }
-
-    .qty-btn { width: 38px; height: 38px; }
-    .qty-input { width: 60px; text-align: center; }
-
-    footer {
-      background: #020617;
-      color: #9ca3af;
-      padding: 22px 0;
-      font-size: 0.9rem;
-    }
-
-    /* Desktop */
-    @media (min-width: 769px) {
-      .navbar.fixed-top { position: fixed; left: 0; right: 0; }
-      body { padding-top: 80px; }
-    }
-    /* Mobile */
-    @media (max-width: 768px) {
-      #trust-bar { position: static; }
-      .navbar.fixed-top { position: static; top: auto; }
-      body { padding-top: 0; }
-    }
-  </style>
+  .review-meta {
+    font-size: 0.85rem;
+    color: #6b7280;
+  }
+</style>
 </head>
-
 <body>
-  <!-- TRUST / DELIVERY BAR -->
-  <div id="trust-bar">
-    <div class="container d-flex justify-content-center gap-4 flex-wrap">
-      <span>🚚 <strong>Next Day Delivery</strong> on orders before <strong>3PM</strong></span>
-      <span>🔒 Secure Bank Transfer</span>
-      <span>🇬🇧 UK Dispatch</span>
-      <span>📦 Discreet Packaging</span>
-    </div>
+<!-- TRUST BAR -->
+<div id="trust-bar">
+  <div class="container d-flex justify-content-center gap-4 flex-wrap">
+    <span>🚚 <strong>Next Day Delivery</strong> on orders before <strong>3PM</strong></span>
+    <span>🔒 Secure Bank Transfer</span>
+    <span>🇬🇧 UK Dispatch</span>
+    <span>📦 Discreet Packaging</span>
   </div>
+</div>
 
-  <!-- NAVBAR -->
-  <nav class="navbar navbar-expand-lg fixed-top">
-    <div class="container">
-      <a class="navbar-brand d-flex align-items-center" href="index.html#home">
-        <img src="LuminaLogoBlack.png" alt="Lumina Weight Logo">
-        <span>Lumina Weight</span>
-      </a>
+<!-- NAV -->
+<nav class="navbar navbar-dark navbar-expand-lg">
+  <div class="container">
+    <a class="navbar-brand" href="index.html#home">
+      🌙 Lumina Admin
+    </a>
 
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-        <span class="navbar-toggler-icon"></span>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="adminNav">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link" href="index.html#home">Store Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="products.html">Products</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="reviews.html">Reviews</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="account.html">My Account</a>
+        </li>
+      </ul>
+
+      <button id="logout-btn" class="btn btn-outline-light btn-sm">
+        Logout
       </button>
-
-      <div class="collapse navbar-collapse" id="mainNav">
-        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-3">
-          <li class="nav-item"><a class="nav-link" href="index.html#home">Home</a></li>
-          <li class="nav-item"><a class="nav-link active" href="products.html">Products</a></li>
-          <li class="nav-item"><a class="nav-link" href="reviews.html">Reviews</a></li>
-          <li class="nav-item"><a class="nav-link" href="index.html#contact">Contact</a></li>
-
-          <!-- Admin (toggled by Supabase auth) -->
-          <li class="nav-item" id="admin-nav-item" style="display:none;">
-            <a class="nav-link" href="admin.html">Admin</a>
-          </li>
-
-          <!-- My Account / Login -->
-          <li class="nav-item">
-            <a class="nav-link" href="account.html" id="account-link">My Account</a>
-          </li>
-
-          <li class="nav-item ms-lg-3">
-            <div class="position-relative">
-              <i class="fas fa-shopping-cart cart-icon" onclick="toggleCart()"></i>
-              <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
-            </div>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
-
-  <div class="overlay" onclick="toggleCart()"></div>
-
-  <!-- CART SIDEBAR -->
-  <div class="cart-sidebar" id="cart-sidebar">
-    <div class="p-4 border-bottom bg-light d-flex justify-content-between align-items-center">
-      <h5 class="mb-0 fw-semibold">Your Cart (<span id="cart-items-count">0</span>)</h5>
-      <button class="btn-close" onclick="toggleCart()"></button>
-    </div>
-    <div id="cart-items" class="p-4" style="min-height: 60vh;">
-      <p class="text-center text-muted m-0">Your cart is empty</p>
-    </div>
-    <div class="p-4 border-top bg-light">
-      <div class="d-flex justify-content-between fs-5 mb-3">
-        <span class="fw-semibold">Total:</span>
-        <span id="cart-total" class="fw-bold">£0.00</span>
-      </div>
-      <button class="btn btn-success w-100 btn-lg rounded-pill" onclick="goToCheckout()">Proceed to Checkout</button>
-      <small class="text-muted d-block mt-2 text-center">
-        Enter delivery details → get payment instructions by email
-      </small>
     </div>
   </div>
+</nav>
 
-  <!-- HERO -->
-  <section class="hero text-center">
-    <div class="container">
-      <div class="hero-eyebrow">
-        <i class="fa-solid fa-vial-circle-check"></i>
-        Full Tirzepatide & Retatrutide Range
-      </div>
-      <h1 class="hero-title">All Lumina Products</h1>
-      <p class="hero-subtitle">
-        Browse every Tirzepatide and Retatrutide vial and pen option.
-        Mix strengths to match where you are in your protocol right now.
-      </p>
-    </div>
-  </section>
+<!-- CONTENT -->
+<div class="container mt-4">
 
-  <!-- ALL PRODUCTS -->
-  <section id="products">
-    <div class="container">
-      <div class="text-center mb-4">
-        <div class="section-eyebrow">All Product Options</div>
-        <h2 class="section-title">Choose Your Strength & Format</h2>
-        <p class="section-subtitle">
-          Select the vial or pen strength that fits your current phase.
-          All products are supplied for <strong>research use only</strong>.
-        </p>
-        <p class="text-muted small mt-2">
-          <strong>Every pen includes 10 sterile pen heads.</strong><br>
-          <strong>Every vial is supplied pre-reconstituted and includes 10 sterile syringes for laboratory use.</strong>
-        </p>
-      </div>
+  <!-- ORDERS SECTION (unchanged, use your existing orders code if you like) -->
+  <div class="section-card mb-4">
+    <h3>Orders</h3>
+    <p id="admin-status" class="text-muted">Checking access…</p>
+    <div id="admin-warning"></div>
+    <div id="orders-list" class="mt-3"></div>
+  </div>
 
-      <div id="all-products-status" class="text-center text-muted mb-3">
-        Loading products…
-      </div>
+  <!-- REVIEWS SECTION -->
+  <div class="section-card">
+    <h3>Pending Reviews</h3>
+    <p class="text-muted" id="reviews-status">Loading pending reviews…</p>
+    <div id="reviews-list" class="mt-3"></div>
+  </div>
+</div>
 
-      <div class="row g-4" id="all-products-list"></div>
-    </div>
-  </section>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
-  <!-- INFO / DOSAGE GUIDE SECTION -->
-  <section id="info-cards" class="py-5">
-    <div class="container">
-      <div class="text-center mb-4">
-        <div class="section-eyebrow">Support</div>
-        <h2 class="section-title">Guides & Helpful Info</h2>
-        <p class="section-subtitle">
-          Learn how our research vials and pens are typically used, how delivery works,
-          and where to read more real-world results. Not medical advice.
-        </p>
-      </div>
+<script>
+  const SUPABASE_URL = "https://qketnqhfjfxbqiuqevnh.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZXRucWhmamZ4YnFpdXFldm5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NjkzMzAsImV4cCI6MjA4MDI0NTMzMH0.JIrgLIwWIA5Gwu9K4BsgS0Y_jyax2G6irqkaf35aPys";
 
-      <div class="row g-4">
-        <div class="col-md-3">
-          <div class="info-card h-100 text-center">
-            <div class="info-icon mb-3"><i class="fa-solid fa-pen-ruler"></i></div>
-            <h5 class="fw-semibold mb-2">Pen Instructions</h5>
-            <p class="small mb-3">How multi-dose pens are typically prepared and used in research settings, with clear guidance.</p>
-            <a href="pen-instructions.html" class="btn-info-link">Read now</a>
-          </div>
-        </div>
+  const ADMIN_EMAIL = "luminaweight@gmail.com";
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        <div class="col-md-3">
-          <div class="info-card h-100 text-center">
-            <div class="info-icon mb-3"><i class="fa-solid fa-syringe"></i></div>
-            <h5 class="fw-semibold mb-2">Dosage Guide</h5>
-            <p class="small mb-3">How many units per mg? Example once-weekly research protocols. For <strong>research calculations only</strong>.</p>
-            <a href="dosage-guide.html" class="btn-info-link">View guide</a>
-          </div>
-        </div>
-
-        <div class="col-md-3">
-          <div class="info-card h-100 text-center">
-            <div class="info-icon mb-3"><i class="fa-regular fa-star"></i></div>
-            <h5 class="fw-semibold mb-2">Reviews</h5>
-            <p class="small mb-3">Read how other clients have found the ordering process, shipping speed and support.</p>
-            <a href="reviews.html" class="btn-info-link">Read reviews</a>
-          </div>
-        </div>
-
-        <div class="col-md-3">
-          <div class="info-card h-100 text-center">
-            <div class="info-icon mb-3"><i class="fa-solid fa-truck-fast"></i></div>
-            <h5 class="fw-semibold mb-2">Delivery & Tracking</h5>
-            <p class="small mb-3">Dispatch times, packaging details and tracking information for UK shipments.</p>
-            <a href="shipping.html" class="btn-info-link">Learn more</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <footer class="text-center">
-    <div class="container">
-      <p class="mb-0">© 2025 Lumina Weight • Research Purposes Only • Not For Human Consumption</p>
-    </div>
-  </footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- Supabase -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script>
-    const SUPABASE_URL = "https://qketnqhfjfxbqiuqevnh.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZXRucWhmamZ4YnFpdXFldm5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NjkzMzAsImV4cCI6MjA4MDI0NTMzMH0.JIrgLIwWIA5Gwu9K4BsgS0Y_jyax2G6irqkaf35aPys";
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    const ADMIN_EMAIL = "luminaweight@gmail.com";
-    const adminNavItem = document.getElementById('admin-nav-item');
-    const accountLink  = document.getElementById('account-link');
-
-    (async () => {
-      try {
-        const { data, error } = await supabaseClient.auth.getUser();
-        const user = data?.user || null;
-
-        if (!error && adminNavItem) {
-          adminNavItem.style.display = (user && user.email === ADMIN_EMAIL) ? 'block' : 'none';
-        }
-
-        if (accountLink) {
-          accountLink.textContent = user ? 'My Account' : 'Login';
-          accountLink.href = 'account.html';
-        }
-      } catch (e) {
-        console.error('Error checking auth', e);
+  // EmailJS init (for shipped emails on orders)
+  (function () {
+    try {
+      if (window.emailjs) {
+        emailjs.init({ publicKey: "uZOuTrBdIAc6AmKjo" });
       }
-    })();
-  </script>
+    } catch (e) {
+      console.error("EmailJS init failed", e);
+    }
+  })();
 
-  <script>
-    // ---------- CART ----------
-    let cart = [];
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      try { cart = JSON.parse(savedCart); } catch (e) { cart = []; }
+  const statusEl      = document.getElementById("admin-status");
+  const ordersEl      = document.getElementById("orders-list");
+  const warningEl     = document.getElementById("admin-warning");
+  const logoutBtn     = document.getElementById("logout-btn");
+
+  const reviewsStatus = document.getElementById("reviews-status");
+  const reviewsEl     = document.getElementById("reviews-list");
+
+  const ordersCache = {};
+
+  function badge(status) {
+    status = (status || "Pending").toLowerCase();
+    if (status === "paid")      return `<span class="badge bg-success">PAID</span>`;
+    if (status === "shipped")   return `<span class="badge bg-primary">SHIPPED</span>`;
+    if (status === "cancelled") return `<span class="badge bg-danger">CANCELLED</span>`;
+    return `<span class="badge bg-warning text-dark">PENDING</span>`;
+  }
+
+  function buildItemsText(order) {
+    const items = order?.details?.items || [];
+    if (!items.length) return "Items not recorded.";
+    return items
+      .map((i) =>
+        `${i.qty} × ${i.name} — £${Number(
+          i.line_total || (i.price_each || 0) * i.qty
+        ).toFixed(2)}`
+      )
+      .join("\n");
+  }
+
+  function sendShippedEmail(order) {
+    if (!order || !window.emailjs) return;
+
+    const customer = order.details?.customer || {};
+    const toEmail =
+      customer.email ||
+      order.customer_email ||
+      order.email ||
+      "";
+
+    const customerName =
+      customer.name || order.customer_name || order.name || "Customer";
+
+    if (!toEmail) {
+      console.warn("No email found on order");
+      return;
     }
 
-    function saveCart() { localStorage.setItem('cart', JSON.stringify(cart)); }
+    const ref   = order.reference || order.id;
+    const total = `£${Number(order.total_amount || 0).toFixed(2)}`;
+    const items = buildItemsText(order);
 
-    function updateCart() {
-      const totalItems = cart.reduce((s,i)=>s+i.qty,0);
-      const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
-      document.getElementById('cart-count').textContent = totalItems;
-      document.getElementById('cart-items-count').textContent = totalItems;
-      document.getElementById('cart-total').textContent = `£${total.toFixed(2)}`;
+    emailjs
+      .send("service_i5zi096", "template_shipped", {
+        email: toEmail,
+        customer_name: customerName,
+        order_reference: ref,
+        order_items: items,
+        order_total: total,
+      })
+      .catch((err) => console.error("Shipped email failed", err));
+  }
 
-      document.getElementById('cart-items').innerHTML = cart.length === 0
-        ? '<p class="text-center text-muted m-0">Your cart is empty</p>'
-        : cart.map((item,i) => `
-          <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
-            <div class="flex-grow-1">
-              <strong>${item.name}</strong><br>
-              <small>£${item.price} × ${item.qty}</small>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-              <button class="btn btn-outline-secondary btn-sm" onclick="updateQty(${i},-1)">–</button>
-              <span class="fw-bold">${item.qty}</span>
-              <button class="btn btn-outline-secondary btn-sm" onclick="updateQty(${i},1)">+</button>
-              <button class="btn btn-sm btn-danger ms-2" onclick="removeFromCart(${i})">×</button>
-            </div>
-          </div>`).join('');
-    }
-    updateCart();
+  async function updateStatus(id, value) {
+    const { error } = await supabaseClient
+      .from("Orders")
+      .update({ status: value })
+      .eq("id", id);
 
-    function updateQty(i, delta) {
-      cart[i].qty = Math.max(1, cart[i].qty + delta);
-      if (cart[i].qty === 0) cart.splice(i, 1);
-      updateCart();
-      saveCart();
+    if (error) {
+      alert("Update failed – check Supabase policy");
+      console.error(error);
+      return;
     }
 
-    function removeFromCart(i) {
-      cart.splice(i, 1);
-      updateCart();
-      saveCart();
+    if (ordersCache[id]) {
+      ordersCache[id].status = value;
     }
 
-    function toggleCart(force) {
-      const sb = document.getElementById('cart-sidebar');
-      const ov = document.querySelector('.overlay');
-      const open = force !== undefined ? force : !sb.classList.contains('open');
-      sb.classList.toggle('open', open);
-      ov.classList.toggle('show', open);
+    if (value === "Shipped" && ordersCache[id]) {
+      sendShippedEmail(ordersCache[id]);
+    }
+  }
+
+  async function loadOrders() {
+    const { data: orders, error } = await supabaseClient
+      .from("Orders")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      statusEl.textContent = "Could not load orders.";
+      console.error(error);
+      return;
     }
 
-    function goToCheckout() {
-      if (cart.length === 0) return alert('Your cart is empty!');
-      const cartData = encodeURIComponent(JSON.stringify(cart));
-      window.location.href = `checkout.html?cart=${cartData}`;
+    if (!orders || orders.length === 0) {
+      statusEl.textContent = "No orders yet.";
+      return;
     }
 
-    // ---------- PRODUCTS FROM SUPABASE ----------
-    let products = [];
-    let currentProduct = null;
+    statusEl.textContent = `${orders.length} orders found`;
 
-    function computeBadge(p) {
-      const name = (p.name || '').toLowerCase();
+    orders.forEach((o) => { ordersCache[o.id] = o; });
 
-      // ✅ Wolverine badge for blend
-      if (name.includes('bpc-157') || name.includes('tb500')) {
-        return { text: 'Wolverine Stack', class: 'pill-wolverine' };
-      }
-
-      if (p.name?.includes('20mg')) return { text: 'Most Popular', class: 'pill-popular' };
-      if (p.price >= 130) return { text: 'Premium', class: 'pill-premium' };
-      return null;
-    }
-
-    function renderProducts() {
-      const listEl = document.getElementById('all-products-list');
-      const statusEl = document.getElementById('all-products-status');
-
-      if (!products.length) {
-        statusEl.textContent = 'No products available yet.';
-        listEl.innerHTML = '';
-        return;
-      }
-
-      statusEl.textContent = '';
-
-      listEl.innerHTML = products.map((p, i) => {
-        const badge = computeBadge(p);
-        const isBlend = (p.name || '').toLowerCase().includes('bpc-157') || (p.name || '').toLowerCase().includes('tb500');
-
-        const typeLabel = isBlend
-          ? 'RECOVERY PEPTIDE BLEND'
-          : p.name.includes('Retatrutide')
-            ? (p.name.includes('Pen') ? 'RETATRUTIDE PEN' : 'RETATRUTIDE VIAL')
-            : (p.name.includes('Pen') ? 'TIRZEPATIDE PEN' : 'TIRZEPATIDE VIAL');
-
-        const baseDesc = isBlend
-          ? 'BPC-157 + TB500 research blend commonly used in recovery, tendon/ligament and tissue-repair studies.'
-          : p.name.includes('Tirzepatide')
-            ? 'Dual GIP/GLP-1 research agonist for appetite and glucose control.'
-            : p.name.includes('Retatrutide')
-              ? 'Multi-receptor research agonist for aggressive weight management.'
-              : 'Research peptide product.';
-
-        const extraInfo = isBlend
-          ? ' Supplied as a research vial for laboratory use. Includes <strong>3ml BAC water</strong> and <strong>10 sterile syringes</strong>.'
-          : p.name.includes('Pen')
-            ? ' Each pen includes 10 sterile pen heads for laboratory research use.'
-            : ' Each vial is supplied pre-reconstituted and includes 10 sterile syringes for laboratory research use.';
-
-        const unitSuffix = p.name.includes('Pen') ? '/pen' : '/vial';
+    ordersEl.innerHTML = orders
+      .map((order) => {
+        const created = new Date(order.created_at).toLocaleString();
+        const ref = order.reference || order.id;
+        const status = order.status || "Pending";
+        const email =
+          order.details?.customer?.email ||
+          order.customer_email ||
+          order.email ||
+          "No email";
+        const name =
+          order.details?.customer?.name ||
+          order.customer_name ||
+          order.name ||
+          "Customer";
+        const total = Number(order.total_amount || 0).toFixed(2);
 
         return `
-          <div class="col-md-3">
-            <div class="position-relative h-100 product-card ${p.stock===0?'out-of-stock':''}" onclick="${p.stock>0?'openModal('+i+')':''}">
-              ${badge ? `<span class="pill-label ${badge.class}">${badge.text}</span>` : ''}
-              <img src="${p.image ? encodeURI(p.image) : ''}" class="w-100 p-4" alt="${p.name}">
-              <div class="product-body d-flex flex-column">
-                <div class="text-start">
-                  <div class="text-uppercase text-xs text-muted" style="font-size: .75rem;">${typeLabel}</div>
-                  <div class="product-name">${p.name}</div>
-                  <div class="text-muted" style="font-size:0.85rem;">
-                    ${baseDesc + extraInfo}
-                  </div>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mt-2">
-                  <div class="product-price">
-                    £${Number(p.price || 0).toFixed(2)}
-                    <span>${unitSuffix}</span>
-                  </div>
-                </div>
-                <p class="stock ${p.stock<=5?'text-danger':'text-success'} mb-1">
-                  ${p.stock>0 ? (p.stock<=5 ? `Low stock: ${p.stock} left` : `In stock: ${p.stock} units`) : '<strong>Out of stock</strong>'}
-                </p>
-                <button class="btn btn-success btn-add mt-auto"
-                        ${p.stock===0?'disabled':''}
-                        onclick="event.stopPropagation(); openModal(${i})">
-                  ${p.stock>0?'Add to cart':'Sold out'}
-                </button>
-              </div>
+        <div class="order-card">
+          <div class="d-flex justify-content-between">
+            <div>
+              <strong>${ref}</strong><br>
+              <small>${created}</small><br>
+              <small>${name} — ${email}</small>
+            </div>
+
+            <div class="text-end">
+              <div class="mb-1">${badge(status)}</div>
+              <div class="fw-bold">£${total}</div>
+
+              <select class="form-select form-select-sm mt-1"
+                onchange="updateStatus('${order.id}', this.value)">
+                <option ${status === "Pending" ? "selected" : ""}>Pending</option>
+                <option ${status === "Paid" ? "selected" : ""}>Paid</option>
+                <option ${status === "Shipped" ? "selected" : ""}>Shipped</option>
+                <option ${status === "Cancelled" ? "selected" : ""}>Cancelled</option>
+              </select>
             </div>
           </div>
-        `;
-      }).join('');
+        </div>
+      `;
+      })
+      .join("");
+  }
+
+  // ------- REVIEWS MODERATION -------
+
+  async function loadPendingReviews() {
+    reviewsStatus.textContent = "Loading pending reviews…";
+
+    const { data, error } = await supabaseClient
+      .from("Reviews")
+      .select("id, name, rating, review_text, approved, created_at")
+      .eq("approved", false)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error loading reviews", error);
+      reviewsStatus.textContent = "Could not load reviews.";
+      return;
     }
 
-    async function loadProductsFromDb() {
-      const statusEl = document.getElementById('all-products-status');
-      statusEl.textContent = 'Loading products…';
-
-      const { data, error } = await supabaseClient
-        .from('Products')
-        .select('id, name, price, image, stock')
-        .order('name', { ascending: true });
-
-      if (error) {
-        console.error('Error loading products', error);
-        statusEl.textContent = 'Could not load products.';
-        return;
-      }
-
-      products = (data || []).map(row => ({
-        id: row.id,
-        name: row.name,
-        price: Number(row.price || 0),
-        image: row.image || '20mg Tirz Vial.png',
-        stock: row.stock ?? 0
-      }));
-
-      renderProducts();
+    if (!data || data.length === 0) {
+      reviewsStatus.textContent = "No pending reviews 🎉";
+      reviewsEl.innerHTML = "";
+      return;
     }
 
-    // ---------- MODAL ----------
-    function openModal(i) {
-      const p = products[i];
-      if (!p || p.stock === 0) return;
+    reviewsStatus.textContent = `${data.length} review(s) · 1 pending`;
 
-      currentProduct = p;
+    reviewsEl.innerHTML = data
+      .map((review) => {
+        const created = review.created_at
+          ? new Date(review.created_at).toLocaleString()
+          : "";
 
-      const accessoriesLine = p.name.includes('Pen')
-        ? 'Each pen includes 10 sterile pen heads for laboratory research use.'
-        : 'Each vial is supplied pre-reconstituted and includes 10 sterile syringes for laboratory research use.';
+        const stars = review.rating
+          ? "★".repeat(review.rating) + "☆".repeat(5 - review.rating)
+          : "";
 
-      let modal = document.getElementById('productModal');
-      if (!modal) {
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = `
-          <div class="modal fade" id="productModal" tabindex="-1">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="modalTitle"></h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body text-center">
-                  <img id="modalImg" src="" class="img-fluid mb-4" style="max-height: 320px;">
-                  <h3 id="modalName"></h3>
-                  <p class="product-price fs-1" id="modalPrice"></p>
-                  <p class="stock text-success mb-2" id="modalStock"></p>
-                  <div id="modalDescription" class="text-start small text-muted mb-3"></div>
-                  <div class="d-flex justify-content-center align-items-center gap-3 my-3">
-                    <button class="btn btn-outline-secondary qty-btn" onclick="changeQty(-1)">–</button>
-                    <input type="number" id="modalQty" value="1" min="1" class="form-control qty-input">
-                    <button class="btn btn-outline-secondary qty-btn" onclick="changeQty(1)">+</button>
-                  </div>
-                  <button id="modalAddBtn" class="btn btn-success btn-lg rounded-pill">Add to Cart</button>
-                </div>
-              </div>
+        const name = review.name || "Anonymous";
+        const message = review.review_text || "";
+
+        return `
+        <div class="review-card">
+          <div class="d-flex justify-content-between">
+            <div>
+              <strong>${name}</strong>
+              <div class="my-1">${stars}</div>
+              <p class="mb-1">${message}</p>
+              <small class="review-meta">${created}</small>
+            </div>
+            <div class="text-end" style="min-width: 140px;">
+              <button class="btn btn-sm btn-success mb-1"
+                onclick="publishReview('${review.id}')">
+                ✅ Publish
+              </button>
+              <button class="btn btn-sm btn-outline-danger"
+                onclick="deleteReview('${review.id}')">
+                🗑 Delete
+              </button>
             </div>
           </div>
-        `;
-        document.body.appendChild(wrapper.firstElementChild);
-        modal = document.getElementById('productModal');
+        </div>
+      `;
+      })
+      .join("");
+  }
+
+  async function publishReview(id) {
+    if (!confirm("Publish this review?")) return;
+
+    const { error } = await supabaseClient
+      .from("Reviews")
+      .update({ approved: true })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error publishing review", error);
+      alert("Failed to publish review – check console.");
+      return;
+    }
+
+    loadPendingReviews();
+  }
+
+  async function deleteReview(id) {
+    if (!confirm("Delete this review permanently?")) return;
+
+    const { error } = await supabaseClient
+      .from("Reviews")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error deleting review", error);
+      alert("Could not delete review – check console.");
+      return;
+    }
+
+    loadPendingReviews();
+  }
+
+  // INIT + AUTH CHECK
+  async function init() {
+    statusEl.textContent = "Checking access…";
+
+    const { data: sessionData, error: sessionError } =
+      await supabaseClient.auth.getSession();
+
+    if (sessionError || !sessionData?.session?.user) {
+      console.warn("No active session", sessionError);
+      window.location.href = "index.html";
+      return;
+    }
+
+    const user = sessionData.session.user;
+
+    if ((user.email || "").toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+      warningEl.innerHTML =
+        `<div class="alert alert-danger">Access denied.</div>`;
+      statusEl.textContent = "Not authorised";
+      reviewsStatus.textContent = "Not authorised";
+      return;
+    }
+
+    statusEl.textContent = "Admin verified ✅";
+    loadOrders();
+    loadPendingReviews();
+  }
+
+  logoutBtn.onclick = async () => {
+    await supabaseClient.auth.signOut();
+    location.href = "index.html";
+  };
+
+  window.updateStatus   = updateStatus;
+  window.publishReview  = publishReview;
+  window.deleteReview   = deleteReview;
+
+  init();
+    // ------- INACTIVITY LOGOUT -------
+
+  // time in ms (e.g. 15 minutes)
+  const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
+
+  let inactivityTimer;
+
+  function resetInactivityTimer() {
+    if (inactivityTimer) clearTimeout(inactivityTimer);
+
+    inactivityTimer = setTimeout(async () => {
+      try {
+        console.log("Logging out due to inactivity...");
+        await supabaseClient.auth.signOut();
+
+        // If you also want to clear cart etc., do it here:
+        // localStorage.removeItem("cart");
+
+        // Redirect wherever makes sense
+        window.location.href = "account.html?timeout=1";
+      } catch (e) {
+        console.error("Error during inactivity logout", e);
       }
+    }, INACTIVITY_TIMEOUT);
+  }
 
-      document.getElementById('modalImg').src = p.image || '';
-      document.getElementById('modalTitle').textContent = p.name;
-      document.getElementById('modalName').textContent  = p.name;
-      document.getElementById('modalPrice').textContent = `£${Number(p.price || 0).toFixed(2)}`;
-      document.getElementById('modalStock').innerHTML   = `In stock – ${p.stock} units`;
+  // Any of these events = "user is active", so reset the timer
+  ["click", "mousemove", "keydown", "scroll", "touchstart"].forEach((evt) => {
+    window.addEventListener(evt, resetInactivityTimer, { passive: true });
+  });
 
-      const descEl = document.getElementById('modalDescription');
-      const isBlend = (p.name || '').toLowerCase().includes('bpc-157') || (p.name || '').toLowerCase().includes('tb500');
-
-      if (isBlend) {
-        descEl.innerHTML = `
-          <p><strong>BPC-157 + TB500</strong> is a commonly used <strong>recovery peptide blend</strong> in laboratory research settings.</p>
-          <p>Typically referenced in studies around <strong>tendon/ligament support, connective tissue repair, inflammation response</strong> and recovery signalling.</p>
-          <p><strong>Supplied with 3ml BAC water and 10 sterile syringes for laboratory research use.</strong></p>
-          <p class="mb-1"><em>For research use only. Not for human consumption.</em></p>
-        `;
-      } else if (p.name.includes('Tirzepatide')) {
-        descEl.innerHTML = `
-          <p><strong>Tirzepatide</strong> is a dual <strong>GIP/GLP-1 receptor agonist</strong> widely studied in metabolic and weight-management research.</p>
-          <p>Typically used for protocols focused on <strong>appetite control, insulin sensitivity and blood-glucose regulation</strong>.</p>
-          <p><strong>${accessoriesLine}</strong></p>
-          <p class="mb-1"><em>For research use only. Not for human consumption.</em></p>
-        `;
-      } else if (p.name.includes('Retatrutide')) {
-        descEl.innerHTML = `
-          <p><strong>Retatrutide</strong> is an advanced <strong>multi-receptor agonist</strong> researched for aggressive weight-management strategies.</p>
-          <p>Often used where <strong>rapid fat loss and metabolic reset</strong> are the focus.</p>
-          <p><strong>${accessoriesLine}</strong></p>
-          <p class="mb-1"><em>For research use only. Not for human consumption.</em></p>
-        `;
-      } else {
-        descEl.innerHTML = `
-          <p>Research product for controlled laboratory studies.</p>
-          <p><strong>${accessoriesLine}</strong></p>
-          <p class="mb-1"><em>For research use only. Not for human consumption.</em></p>
-        `;
-      }
-
-      document.getElementById('modalQty').value = 1;
-
-      document.getElementById('modalAddBtn').onclick = () => {
-        const qty = parseInt(document.getElementById('modalQty').value) || 1;
-        addToCart(p, qty);
-        bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
-      };
-
-      new bootstrap.Modal(modal).show();
-    }
-
-    function changeQty(delta) {
-      const input = document.getElementById('modalQty');
-      let val = parseInt(input.value) || 1;
-      val = Math.max(1, val + delta);
-      input.value = val;
-    }
-
-    function addToCart(product, qty) {
-      const existing = cart.find(item => item.name === product.name && item.price === product.price);
-      if (existing) existing.qty += qty;
-      else cart.push({ name: product.name, price: product.price, qty });
-      updateCart();
-      saveCart();
-      toggleCart(true);
-    }
-
-    loadProductsFromDb();
-  </script>
+  // Start the timer when the page loads
+  resetInactivityTimer();
+</script>
 </body>
 </html>
