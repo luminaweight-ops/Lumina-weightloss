@@ -229,13 +229,10 @@
       .order("created_at", { ascending: false });
 
     if (error) {
-  statusEl.textContent = "Could not load orders.";
-  warningEl.innerHTML = `<div class="alert alert-danger small mb-0">
-    ${error.message || "Unknown error"} (${error.code || "no-code"})
-  </div>`;
-  console.error(error);
-  return;
-}
+      statusEl.textContent = "Could not load orders.";
+      console.error(error);
+      return;
+    }
 
     if (!orders || orders.length === 0) {
       statusEl.textContent = "No orders yet.";
@@ -404,7 +401,7 @@
 
     const user = sessionData.session.user;
 
-    if ((user.email || "").toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    if (user.email !== ADMIN_EMAIL) {
       warningEl.innerHTML =
         `<div class="alert alert-danger">Access denied.</div>`;
       statusEl.textContent = "Not authorised";
