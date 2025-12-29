@@ -421,30 +421,6 @@ async function saveOrderToSupabase(details) {
   }
 }
 
-// ---------- ABANDONED CHECKOUT SAVE ----------
-async function saveAbandonedCheckout(details, recoveryToken) {
-  try {
-    const { error } = await supabaseClient
-      .from('AbandonedCheckouts')
-      .insert({
-        email: details.email,
-        name: details.name,
-        cart,
-        recovery_token: recoveryToken,
-        status: 'pending',
-        total_amount: total,
-        reference: details.ref
-      });
-
-    if (error) {
-      console.error('Error saving abandoned checkout:', error);
-    } else {
-      console.log('✅ Abandoned checkout saved');
-    }
-  } catch (e) {
-    console.error('Unexpected error saving abandoned checkout', e);
-  }
-}
 
 // ---------- EMAILS ----------
 
