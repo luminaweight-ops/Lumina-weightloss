@@ -375,9 +375,12 @@ function getCartSummaryText() {
 async function saveOrderToSupabase(details) {
   try {
     const { data, error } = await supabaseClient.auth.getUser();
-    
-    // Get user_id if logged in, otherwise null for guest orders
-    const userId = (error || !data || !data.user) ? null : data.user.id;
+    if (error || !data || !data.user) {
+      console.log('No logged-in user, skipping Supabase order save.');
+      return;
+    }
+
+    const user = data.user;
 
     const orderDetails = {
       customer: {
@@ -401,7 +404,7 @@ async function saveOrderToSupabase(details) {
     const { error: insertError } = await supabaseClient
       .from('Orders')
       .insert({
-        user_id: userId,  // This will be null for guest orders
+        user_id: user.id,
         total_amount: total,
         status: 'Pending',
         reference: details.ref,
@@ -411,7 +414,7 @@ async function saveOrderToSupabase(details) {
     if (insertError) {
       console.error('Error saving order to Supabase:', insertError);
     } else {
-      console.log('✅ Order saved to Supabase', userId ? '(User order)' : '(Guest order)');
+      console.log('✅ Order saved to Supabase');
     }
   } catch (err) {
     console.error('Unexpected error saving order to Supabase:', err);
@@ -569,24 +572,26 @@ document.getElementById('addressForm').onsubmit = async function(e) {
   btn.textContent = 'Processing...';
 
   try {
-    // 1. SAVE THE ACTUAL ORDER FIRST (for both guest and logged-in users)
-    await saveOrderToSupabase(details);
-
-    // 2. Save abandoned checkout for recovery tracking
+    // Save abandoned checkout (so we can recover later)
     await saveAbandonedCheckout(details, recoveryToken);
 
-    // 3. Send all emails
-    sendAdminEmail(details);
-    sendCustomerEmail(details);
+    // Send abandoned / recovery email
     await sendAbandonedEmail(details, recoveryLink);
 
-    // 4. Clear cart
+    // Existing emails
+    sendAdminEmail(details);
+    sendCustomerEmail(details);
+
+    // Save order to Supabase if user logged in
+    await saveOrderToSupabase(details);
+
+    // Clear cart storage so basket is empty when back on main page
     clearStoredCart();
 
-    // 5. Show success modal
+    // Show modal
     new bootstrap.Modal(document.getElementById('paymentModal')).show();
 
-    checkoutStatus.textContent = 'We've emailed your payment instructions and order link.';
+    checkoutStatus.textContent = 'We’ve emailed your payment instructions and order link.';
     checkoutStatus.classList.add('text-success');
   } catch (err) {
     console.error('Checkout flow error', err);
