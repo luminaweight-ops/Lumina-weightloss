@@ -375,12 +375,9 @@ function getCartSummaryText() {
 async function saveOrderToSupabase(details) {
   try {
     const { data, error } = await supabaseClient.auth.getUser();
-    if (error || !data || !data.user) {
-      console.log('No logged-in user, skipping Supabase order save.');
-      return;
-    }
-
-    const user = data.user;
+    
+    // Get user_id if logged in, otherwise null for guest orders
+    const userId = (error || !data || !data.user) ? null : data.user.id;
 
     const orderDetails = {
       customer: {
@@ -404,7 +401,7 @@ async function saveOrderToSupabase(details) {
     const { error: insertError } = await supabaseClient
       .from('Orders')
       .insert({
-        user_id: user.id,
+        user_id: userId,  // This will be null for guest orders
         total_amount: total,
         status: 'Pending',
         reference: details.ref,
@@ -414,7 +411,7 @@ async function saveOrderToSupabase(details) {
     if (insertError) {
       console.error('Error saving order to Supabase:', insertError);
     } else {
-      console.log('✅ Order saved to Supabase');
+      console.log('✅ Order saved to Supabase', userId ? '(User order)' : '(Guest order)');
     }
   } catch (err) {
     console.error('Unexpected error saving order to Supabase:', err);
