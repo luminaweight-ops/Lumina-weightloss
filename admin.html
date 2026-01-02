@@ -234,25 +234,29 @@
   }
 
   async function updateStatus(id, value) {
-    const { error } = await supabaseClient
-      .from("Orders")
-      .update({ status: value })
-      .eq("id", id);
+  const { error } = await supabaseClient
+    .from("Orders")
+    .update({ status: value })
+    .eq("id", id);
 
-    if (error) {
-      alert("Update failed – check Supabase policy");
-      console.error(error);
-      return;
-    }
-
-    if (ordersCache[id]) {
-      ordersCache[id].status = value;
-    }
-
-    if (value === "Shipped" && ordersCache[id]) {
-      sendShippedEmail(ordersCache[id]);
-    }
+  if (error) {
+    alert("Update failed – check Supabase policy");
+    console.error(error);
+    return;
   }
+
+  if (ordersCache[id]) {
+    ordersCache[id].status = value;
+  }
+
+  if (value === "Shipped" && ordersCache[id]) {
+    sendShippedEmail(ordersCache[id]);
+  }
+
+  if (value === "Cancelled" && ordersCache[id]) {
+    sendCancelledEmail(ordersCache[id]);
+  }
+}
 
   async function loadOrders() {
     const { data: orders, error } = await supabaseClient
