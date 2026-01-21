@@ -42,6 +42,29 @@
     gap: 6px;
     margin-top: 8px;
   }
+
+  .items-box{
+    margin-top:10px;
+    background:#f8fafc;
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:12px;
+    padding:10px 12px;
+    font-size:.9rem;
+    color:#0f172a;
+    white-space: pre-line;
+  }
+
+  .items-box strong{
+    font-size:.85rem;
+    color:#334155;
+    display:block;
+    margin-bottom:6px;
+  }
+
+  .muted-line{
+    color:#64748b;
+    font-size:.85rem;
+  }
 </style>
 </head>
 
@@ -136,12 +159,45 @@
     return `<span class="badge bg-warning text-dark">PENDING</span>`;
   }
 
+  // ---- extras label helper ----
+  function extrasLabel(item) {
+    const n = (item?.name || "").toLowerCase();
+    const penHeads = item?.pen_heads ? String(item.pen_heads).trim() : "";
+    const syringes = item?.syringes ? String(item.syringes).trim() : "";
+
+    if (n.includes("pen") && penHeads) return ` (Pen heads: ${penHeads})`;
+    if (n.includes("vial") && syringes) return ` (Syringes: ${syringes})`;
+    return "";
+  }
+
+  // used for emails (now includes extras)
   function buildItemsText(order) {
     const items = order?.details?.items || [];
     if (!items.length) return "Items not recorded.";
     return items
-      .map((i) => `${i.qty} × ${i.name} — £${Number(i.line_total || (i.price_each || 0) * i.qty).toFixed(2)}`)
+      .map((i) => {
+        const lineTotal = Number(i.line_total || (i.price_each || 0) * i.qty);
+        return `${i.qty} × ${i.name}${extrasLabel(i)} — £${lineTotal.toFixed(2)}`;
+      })
       .join("\n");
+  }
+
+  // used for admin UI display
+  function buildItemsHtml(order) {
+    const items = order?.details?.items || [];
+    if (!items.length) return `<div class="items-box"><strong>Items</strong><div class="muted-line">No items recorded.</div></div>`;
+
+    const lines = items.map((i) => {
+      const lineTotal = Number(i.line_total || (i.price_each || 0) * i.qty);
+      return `${i.qty} × ${i.name}${extrasLabel(i)} — £${lineTotal.toFixed(2)}`;
+    }).join("\n");
+
+    return `
+      <div class="items-box">
+        <strong>Items</strong>
+        ${lines}
+      </div>
+    `;
   }
 
   // ---------- EMAIL: SHIPPED ----------
@@ -188,8 +244,6 @@
       ? new Date(order.created_at).toLocaleString()
       : new Date().toLocaleString();
 
-    // IMPORTANT: these keys must match your EmailJS template variables:
-    // {{customer_name}} {{order_ref}} {{order_date}}
     return emailjs.send("service_i5zi096", "template_cancelled", {
       email: toEmail,
       customer_name: customerName,
@@ -214,8 +268,6 @@
     const ref = order.reference || order.id;
     const total = `£${Number(order.total_amount || 0).toFixed(2)}`;
 
-    // IMPORTANT: template variables must be:
-    // {{customer_name}} {{order_ref}} {{order_total}} {{email}}
     return emailjs.send("service_i5zi096", "template_paid", {
       email: toEmail,
       customer_name: customerName,
@@ -224,7 +276,7 @@
     });
   }
 
-  // ---------- BUTTON HANDLERS (manual send) ----------
+  // ---------- BUTTON HANDLERS ----------
   async function sendShippedEmailById(orderId) {
     const order = ordersCache[orderId];
     if (!order) return alert("Order not found.");
@@ -255,7 +307,6 @@
     }
   }
 
-  // NEW: mark paid + send payment email (one click)
   async function markPaidAndSendById(orderId) {
     const order = ordersCache[orderId];
     if (!order) return alert("Order not found.");
@@ -263,10 +314,10 @@
     if (!confirm("Confirm PAYMENT RECEIVED and email customer?")) return;
 
     try {
-      // 1) Send email
+      // send email first
       await sendPaidEmail(order);
 
-      // 2) Update status to Paid
+      // then update status
       const { error } = await supabaseClient
         .from("Orders")
         .update({ status: "Paid" })
@@ -278,7 +329,6 @@
         return;
       }
 
-      // update cache + refresh UI
       ordersCache[orderId].status = "Paid";
       alert("Payment received email sent 💷✅");
       loadOrders();
@@ -288,7 +338,7 @@
     }
   }
 
-  // ---------- STATUS UPDATE (NO EMAIL AUTO-SEND) ----------
+  // ---------- STATUS UPDATE ----------
   async function updateStatus(id, value) {
     const { error } = await supabaseClient
       .from("Orders")
@@ -302,8 +352,6 @@
     }
 
     if (ordersCache[id]) ordersCache[id].status = value;
-
-    // refresh UI so badge updates immediately
     loadOrders();
   }
 
@@ -328,7 +376,6 @@
 
     statusEl.textContent = `${orders.length} orders found`;
 
-    // refresh cache
     for (const o of orders) ordersCache[o.id] = o;
 
     ordersEl.innerHTML = orders.map((order) => {
@@ -352,10 +399,11 @@
       return `
         <div class="order-card">
           <div class="d-flex justify-content-between align-items-start">
-            <div>
+            <div style="flex:1; padding-right:14px;">
               <strong>${ref}</strong><br>
               <small>${created}</small><br>
               <small>${name} — ${email}</small>
+              ${buildItemsHtml(order)}
             </div>
 
             <div class="text-end" style="min-width: 240px;">
