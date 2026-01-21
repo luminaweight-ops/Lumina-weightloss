@@ -59,6 +59,15 @@
     background: var(--lw-mint);
     color: #ffffff;
   }
+
+  .addon-row {
+    margin-top: 6px;
+  }
+  .addon-row label{
+    font-size: 0.85rem;
+    color: var(--lw-muted);
+    margin-right: 8px;
+  }
 </style>
 </head>
 <body>
@@ -189,6 +198,37 @@
 let cart = [];
 let total = 0;
 
+// ---------- ACCESSORY RULES ----------
+function isPenItem(name) {
+  return (name || '').toLowerCase().includes('pen');
+}
+function isVialItem(name) {
+  return (name || '').toLowerCase().includes('vial');
+}
+
+function extraLabel(item) {
+  const n = (item?.name || '').toLowerCase();
+  if (n.includes('pen') && item.pen_heads) return ` (Pen heads: ${item.pen_heads})`;
+  if (n.includes('vial') && item.syringes) return ` (Syringes: ${item.syringes})`;
+  return '';
+}
+
+function saveCartToStorage() {
+  try { localStorage.setItem('cart', JSON.stringify(cart)); } catch (e) {}
+}
+
+// called by dropdowns
+function setAccessory(index, field, value) {
+  if (!cart[index]) return;
+  const v = (value === 'none' ? '' : value);
+
+  if (field === 'pen_heads') cart[index].pen_heads = v;
+  if (field === 'syringes')  cart[index].syringes  = v;
+
+  saveCartToStorage();
+  renderOrderSummary(); // re-render so user sees it reflected
+}
+
 // ---------- BUNDLE CALCULATOR ----------
 function calculateBundle(cart) {
   let vialQty = 0, penQty = 0;
@@ -291,6 +331,42 @@ async function maybeRecoverCart() {
   }
 }
 
+function accessoryDropdownHTML(item, index) {
+  const name = item?.name || '';
+
+  if (isPenItem(name)) {
+    const current = item.pen_heads ? String(item.pen_heads) : 'none';
+    return `
+      <div class="addon-row d-flex align-items-center justify-content-between">
+        <label class="m-0">Pen heads</label>
+        <select class="form-select form-select-sm" style="max-width: 180px;"
+          onchange="setAccessory(${index}, 'pen_heads', this.value)">
+          <option value="none" ${current === 'none' ? 'selected' : ''}>Not required</option>
+          <option value="5" ${current === '5' ? 'selected' : ''}>5</option>
+          <option value="10" ${current === '10' ? 'selected' : ''}>10</option>
+        </select>
+      </div>
+    `;
+  }
+
+  if (isVialItem(name)) {
+    const current = item.syringes ? String(item.syringes) : 'none';
+    return `
+      <div class="addon-row d-flex align-items-center justify-content-between">
+        <label class="m-0">Syringes</label>
+        <select class="form-select form-select-sm" style="max-width: 180px;"
+          onchange="setAccessory(${index}, 'syringes', this.value)">
+          <option value="none" ${current === 'none' ? 'selected' : ''}>Not required</option>
+          <option value="5" ${current === '5' ? 'selected' : ''}>5</option>
+          <option value="10" ${current === '10' ? 'selected' : ''}>10</option>
+        </select>
+      </div>
+    `;
+  }
+
+  return '';
+}
+
 function renderOrderSummary() {
   if (!cart.length) return;
 
@@ -303,10 +379,13 @@ function renderOrderSummary() {
   const bundleAmountEl  = document.getElementById('bundle-amount');
   const bundleMessageEl = document.getElementById('bundle-message');
 
-  summaryEl.innerHTML = cart.map(i => `
-    <div class="d-flex justify-content-between py-2 border-bottom">
-      <span>${i.qty} × ${i.name}</span>
-      <span>£${(i.price * i.qty).toFixed(2)}</span>
+  summaryEl.innerHTML = cart.map((i, idx) => `
+    <div class="py-2 border-bottom">
+      <div class="d-flex justify-content-between">
+        <span>${i.qty} × ${i.name}${extraLabel(i)}</span>
+        <span>£${(i.price * i.qty).toFixed(2)}</span>
+      </div>
+      ${accessoryDropdownHTML(i, idx)}
     </div>
   `).join('');
 
@@ -325,7 +404,10 @@ function renderOrderSummary() {
 
 function buildItemsText() {
   if (!cart.length) return 'No items (cart empty).';
-  return cart.map(i => `${i.qty} × ${i.name} — £${(i.price * i.qty).toFixed(2)}`).join('\n');
+  return cart.map(i => {
+    const base = `${i.qty} × ${i.name}${extraLabel(i)} — £${(i.price * i.qty).toFixed(2)}`;
+    return base;
+  }).join('\n');
 }
 
 function buildAddressText(details) {
@@ -361,7 +443,10 @@ async function saveOrderToSupabase(details) {
         name: i.name,
         qty: i.qty,
         price_each: i.price,
-        line_total: i.price * i.qty
+        line_total: i.price * i.qty,
+        // store optional extras (blank if not chosen)
+        pen_heads: i.pen_heads || "",
+        syringes: i.syringes || ""
       })),
       reference: details.ref
     };
@@ -434,7 +519,7 @@ async function saveAbandonedCheckout(details, recoveryToken) {
   }
 }
 
-// ---------- EMAILS (FIXED: return promises) ----------
+// ---------- EMAILS (return promises) ----------
 function sendAdminEmail(details) {
   const itemsText = buildItemsText();
   const addressText = buildAddressText(details);
@@ -508,7 +593,7 @@ document.getElementById('addressForm').onsubmit = async function(e) {
   document.getElementById('customerName').textContent = name;
   document.getElementById('payment-summary').innerHTML = cart.map(i => `
     <div class="d-flex justify-content-between">
-      <span>${i.qty} × ${i.name}</span>
+      <span>${i.qty} × ${i.name}${extraLabel(i)}</span>
       <span>£${(i.price*i.qty).toFixed(2)}</span>
     </div>
   `).join('');
@@ -544,7 +629,7 @@ document.getElementById('addressForm').onsubmit = async function(e) {
     // 3) Save abandoned checkout
     await saveAbandonedCheckout(details, recoveryToken);
 
-    // 4) Send emails (WAIT for them, so they actually send)
+    // 4) Send emails
     const emailResults = await Promise.allSettled([
       sendAdminEmail(details),
       sendCustomerEmail(details),
@@ -574,7 +659,6 @@ document.getElementById('addressForm').onsubmit = async function(e) {
 };
 
 function backToShop() {
-  // Home page of your site
   window.location.href = 'index.html';
 }
 
@@ -588,6 +672,14 @@ function backToShop() {
     window.location.href = 'index.html';
     return;
   }
+
+  // ensure cart has extras keys (optional)
+  cart = cart.map(i => ({
+    ...i,
+    pen_heads: i.pen_heads || "",
+    syringes: i.syringes || ""
+  }));
+  saveCartToStorage();
 
   renderOrderSummary();
 })();
