@@ -74,12 +74,72 @@
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
 <script>
-/* ---------- IMAGE PATH FIX (FOR .co.uk ROOT FILES) ---------- */
-function imgSrc(image){
-  if(!image) return '';
-  if(/^https?:\/\//i.test(image)) return image;     // full URL stored in DB
-  if(image.startsWith('/')) return encodeURI(image); // already root path
-  return '/' + encodeURI(image);                    // force root path
+/* ---------- IMAGE FALLBACK LOADER ---------- */
+function cleanImageValue(v){
+  if(!v) return '';
+  return String(v).trim().replace(/^"+|"+$/g,'').replace(/^'+|'+$/g,'');
+}
+
+function encodeFilePath(path){
+  // encode spaces etc, but keep slashes
+  return path.split('/').map(part => encodeURIComponent(part)).join('/');
+}
+
+function getCandidates(imageValue){
+  const raw = cleanImageValue(imageValue);
+  if(!raw) return [];
+
+  // Full URL? use it directly
+  if(/^https?:\/\//i.test(raw)) return [raw];
+
+  const file = raw.replace(/^\/+/,''); // remove leading slash
+  const encFile = encodeFilePath(file);
+
+  // try as stored (could already include folders)
+  const asStored = raw.startsWith('/') ? encodeFilePath(raw) : encodeFilePath(raw);
+
+  // candidates
+  const list = [
+    asStored,               // exactly as stored (might be "images/x.png")
+    '/' + encFile,          // root
+    './' + encFile,         // same folder
+    '/images/' + encFile,   // common folder
+    './images/' + encFile
+  ];
+
+  // de-dupe
+  return [...new Set(list)];
+}
+
+function setFirstValidImage(imgEl, imageValue){
+  const candidates = getCandidates(imageValue);
+  imgEl.dataset.candidates = JSON.stringify(candidates);
+  imgEl.dataset.candidateIndex = "0";
+
+  if(candidates.length){
+    imgEl.src = candidates[0];
+  } else {
+    imgEl.removeAttribute('src');
+  }
+}
+
+function onImgError(imgEl){
+  try{
+    const candidates = JSON.parse(imgEl.dataset.candidates || '[]');
+    let idx = parseInt(imgEl.dataset.candidateIndex || '0', 10);
+    idx++;
+
+    if(idx < candidates.length){
+      imgEl.dataset.candidateIndex = String(idx);
+      imgEl.src = candidates[idx];
+      return;
+    }
+
+    // final fallback: show nothing (or you can put a placeholder)
+    imgEl.src = '/LuminaLogoBlack.png';
+  }catch(e){
+    imgEl.src = '/LuminaLogoBlack.png';
+  }
 }
 
 /* ---------- SUPABASE ---------- */
@@ -110,8 +170,13 @@ function renderProducts(){
 
   list.innerHTML = products.map((p,i)=>`
     <div class="col-md-3">
-      <div class="product-card h-100 p-3" onclick="openModal(${i})">
-        <img src="${imgSrc(p.image)}" class="w-100 mb-3" alt="${p.name}">
+      <div class="product-card h-100 p-3" onclick="addOne(${i})">
+        <img
+          class="w-100 mb-3"
+          alt="${(p.name||'').replace(/"/g,'&quot;')}"
+          onerror="onImgError(this)"
+          data-image="${(p.image||'').replace(/"/g,'&quot;')}"
+        >
         <h6 class="fw-bold">${p.name}</h6>
         <p class="text-muted small mb-2">Research material — not for human consumption</p>
         <div class="fw-bold fs-5">£${Number(p.price || 0).toFixed(2)}</div>
@@ -121,6 +186,11 @@ function renderProducts(){
       </div>
     </div>
   `).join('');
+
+  // After DOM is built, set images with fallback candidates
+  document.querySelectorAll('img[data-image]').forEach(img => {
+    setFirstValidImage(img, img.dataset.image || '');
+  });
 }
 
 async function loadProducts(){
@@ -135,12 +205,11 @@ async function loadProducts(){
     return;
   }
 
-  // normalise image + numbers so render is safe
   products = (data || []).map(p => ({
     id: p.id,
     name: p.name,
     price: Number(p.price || 0),
-    image: p.image || '',
+    image: cleanImageValue(p.image || ''),
     stock: Number(p.stock ?? 0)
   }));
 
@@ -148,10 +217,10 @@ async function loadProducts(){
 }
 loadProducts();
 
-/* ---------- “ADD TO CART” ---------- */
-function openModal(i){
+/* ---------- ADD TO CART ---------- */
+function addOne(i){
   const p = products[i];
-  if(!p || p.stock===0) return;
+  if(!p || p.stock === 0) return;
 
   const existing = cart.find(x => x.id === p.id);
   if(existing) existing.qty += 1;
