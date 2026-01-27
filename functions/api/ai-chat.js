@@ -1,59 +1,32 @@
 export async function onRequestPost({ request, env }) {
-  try {
-    const body = await request.json().catch(() => ({}));
-    const message = String(body.message || "").slice(0, 2000);
-    const product = String(body.product || "").slice(0, 200);
+  const { message } = await request.json();
 
-    const system = `
-You are Lumina Weight's Research Info Assistant.
-Rules:
-- Educational information only. Not medical advice.
-- Do NOT provide dosing, protocols, “how to use”, injection guidance, reconstitution, mixing volumes, stacks/cycles, sourcing, or purchasing advice.
-- If asked for any of the above, refuse briefly and suggest speaking to a licensed clinician.
-- You can explain: what it is, mechanism at a high level, research status, typical study context, common risks/side effects at a high level, contraindication themes, and red-flag symptoms.
-- Keep it clear and concise.`;
+  // Cloudflare AI Gateway "compat" base URL from your screenshot:
+  const base = `https://gateway.ai.cloudflare.com/v1/${env.CF_ACCOUNT_ID}/${env.CF_GATEWAY_ID}/compat`;
 
-    const catalogHint = product
-      ? `User selected product: ${product}. Provide high-level info only, following the rules.`
-      : `No product selected. Encourage selecting a product.`;
-
-    const payload = {
-      model: "gpt-4.1-mini",
-      input: [
-        { role: "system", content: system },
-        { role: "system", content: catalogHint },
+  const resp = await fetch(`${base}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${env.CF_AI_GATEWAY_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "openai/gpt-5", // or whichever you select in Gateway
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are an informational assistant. Provide high-level, non-medical info only. No dosing, mixing, injection, cycle advice. Encourage consulting a qualified clinician. State 'research use only' and include safety cautions."
+        },
         { role: "user", content: message }
-      ],
-      max_output_tokens: 350
-    };
+      ]
+    }),
+  });
 
-    const r = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
+  const data = await resp.json();
+  const text = data?.choices?.[0]?.message?.content ?? "No response";
 
-    if (!r.ok) {
-      const detail = await r.text();
-      return new Response(JSON.stringify({ error: "AI request failed", detail }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
-
-    const data = await r.json();
-    const reply = data.output_text || "No response.";
-
-    return new Response(JSON.stringify({ reply }), {
-      headers: { "Content-Type": "application/json" }
-    });
-  } catch (e) {
-    return new Response(JSON.stringify({ error: "Bad request", detail: String(e) }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" }
-    });
-  }
+  return new Response(JSON.stringify({ text }), {
+    headers: { "Content-Type": "application/json" },
+  });
 }
