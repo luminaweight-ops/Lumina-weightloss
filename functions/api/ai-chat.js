@@ -1,48 +1,37 @@
 export async function onRequestPost({ request, env }) {
   try {
     const body = await request.json();
-    const userMessage = body.message;
 
-    if (!userMessage) {
-      return new Response(
-        JSON.stringify({ error: "No message provided" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    const res = await fetch(env.CF_AI_BASE_URL, {
+    const res = await fetch(`${env.CF_AI_BASE_URL}/chat/completions`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${env.CF_AI_GATEWAY_TOKEN}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${env.CF_AI_GATEWAY_TOKEN}`
       },
       body: JSON.stringify({
-        model: "openai/gpt-4.1-mini",
+        model: "openai/gpt-5",
         messages: [
           {
             role: "system",
             content:
-              "You are Lumina AI. Provide research-context information only. No dosing, no medical advice, no instructions."
+              "Educational research information only. No dosing, no medical advice."
           },
           {
             role: "user",
-            content: userMessage
+            content: body.message
           }
         ]
       })
     });
 
     const data = await res.json();
-
-    return new Response(
-      JSON.stringify({ reply: data.choices?.[0]?.message?.content || "No reply" }),
-      { headers: { "Content-Type": "application/json" } }
-    );
-
+    return new Response(JSON.stringify(data), {
+      headers: { "Content-Type": "application/json" }
+    });
   } catch (err) {
     return new Response(
       JSON.stringify({ error: err.message }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500 }
     );
   }
 }
