@@ -251,29 +251,6 @@ function validateAccessories() {
 
 // ---------- BUNDLE CALCULATOR ----------
 function calculateBundle(cart) {
-  let totalQty = 0;
-  let baseTotal = 0;
-
-  cart.forEach(item => {
-    const qty = Number(item.qty || 0);
-    const line = Number(item.price || 0) * qty;
-    totalQty += qty;
-    baseTotal += line;
-  });
-
-  let discount = 0;
-  const messages = [];
-
-  if (totalQty >= 3) {
-    discount = baseTotal * 0.10;
-    messages.push('10% bundle discount applied (3+ items).');
-  }
-
-  const finalTotal = Math.max(0, baseTotal - discount);
-
-  return { baseTotal, discount, finalTotal, messages };
-}
-  function calculateBundle(cart) {
   let vialQty = 0, penQty = 0;
   let vialTotal = 0, penTotal = 0, otherTotal = 0;
 
@@ -315,6 +292,11 @@ function calculateBundle(cart) {
   discount += d;
   messages.push('5% pen bundle discount applied (2 pens).');
 
+  }
+  
+if (totalQty >= 3) {
+    discount = baseTotal * 0.10;
+    messages.push('10% bundle discount applied (3+ items).');
   }
 
   const finalTotal = Math.max(0, baseTotal - discount);
