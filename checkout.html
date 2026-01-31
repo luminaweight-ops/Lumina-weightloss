@@ -293,11 +293,6 @@ function calculateBundle(cart) {
   messages.push('5% pen bundle discount applied (2 pens).');
 
   }
-  
-if (totalQty >= 3) {
-    discount = baseTotal * 0.10;
-    messages.push('10% bundle discount applied (3+ items).');
-  }
 
   const finalTotal = Math.max(0, baseTotal - discount);
 
