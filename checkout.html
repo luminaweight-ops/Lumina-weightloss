@@ -217,12 +217,11 @@ function saveCartToStorage() {
   try { localStorage.setItem('cart', JSON.stringify(cart)); } catch (e) {}
 }
 
-// called by dropdowns (UPDATED)
+// called by dropdowns
 function setAccessory(index, field, value) {
   if (!cart[index]) return;
 
   const v = (value || '').trim(); // '' if not selected
-
   if (field === 'pen_heads') cart[index].pen_heads = v;
   if (field === 'syringes')  cart[index].syringes  = v;
 
@@ -230,13 +229,12 @@ function setAccessory(index, field, value) {
   renderOrderSummary();
 }
 
-// Validate mandatory selections (NEW)
+// Validate mandatory selections
 function validateAccessories() {
   const missing = [];
 
   cart.forEach((item) => {
     const n = (item?.name || '').toLowerCase();
-
     // must be chosen (including 'none')
     if (n.includes('pen') && !String(item.pen_heads || '').trim()) {
       missing.push(`Select Pen heads for: ${item.name}`);
@@ -247,6 +245,41 @@ function validateAccessories() {
   });
 
   return missing;
+}
+
+// ---------- PRICE SYNC (IMPORTANT) ----------
+async function syncCartPricesFromSupabase() {
+  try {
+    const ids = cart.map(i => i.id).filter(Boolean);
+    if (!ids.length) return;
+
+    const { data, error } = await supabaseClient
+      .from('Products')
+      .select('id, name, price')
+      .in('id', ids);
+
+    if (error) {
+      console.error('Price sync failed:', error);
+      return;
+    }
+
+    const map = new Map((data || []).map(p => [p.id, p]));
+
+    cart = cart.map(item => {
+      const p = map.get(item.id);
+      if (!p) return item;
+
+      return {
+        ...item,
+        name: p.name || item.name,
+        price: Number(p.price || 0)
+      };
+    });
+
+    saveCartToStorage();
+  } catch (e) {
+    console.error('Unexpected price sync error:', e);
+  }
 }
 
 // ---------- BUNDLE CALCULATOR ----------
@@ -276,7 +309,7 @@ function calculateBundle(cart) {
     }
   });
 
-  // --- Existing category discounts (keep as you have it) ---
+  // --- Existing category discounts ---
   let categoryDiscount = 0;
   const categoryMessages = [];
 
@@ -300,7 +333,7 @@ function calculateBundle(cart) {
     categoryMessages.push('5% pen bundle discount applied (2 pens).');
   }
 
-  // --- New cart-level discount (any 2 = 5%, any 3+ = 10%) ---
+  // --- Cart-level discount (any 2 = 5%, any 3+ = 10%) ---
   let cartDiscount = 0;
   let cartMessage = '';
 
@@ -312,7 +345,7 @@ function calculateBundle(cart) {
     cartMessage = '5% bundle discount applied (any 2 items).';
   }
 
-  // --- Choose the best single discount (NO STACKING) ---
+  // --- Choose best single discount (NO STACKING) ---
   let discount = 0;
   const messages = [];
 
@@ -386,7 +419,7 @@ async function maybeRecoverCart() {
   }
 }
 
-// Dropdown HTML (UPDATED to be mandatory + includes None required)
+// Dropdown HTML (mandatory + includes None required)
 function accessoryDropdownHTML(item, index) {
   const name = item?.name || '';
 
@@ -441,7 +474,7 @@ function renderOrderSummary() {
     <div class="py-2 border-bottom">
       <div class="d-flex justify-content-between">
         <span>${i.qty} × ${i.name}${extraLabel(i)}</span>
-        <span>£${(i.price * i.qty).toFixed(2)}</span>
+        <span>£${(Number(i.price || 0) * Number(i.qty || 0)).toFixed(2)}</span>
       </div>
       ${accessoryDropdownHTML(i, idx)}
     </div>
@@ -463,7 +496,7 @@ function renderOrderSummary() {
 function buildItemsText() {
   if (!cart.length) return 'No items (cart empty).';
   return cart.map(i => {
-    const base = `${i.qty} × ${i.name}${extraLabel(i)} — £${(i.price * i.qty).toFixed(2)}`;
+    const base = `${i.qty} × ${i.name}${extraLabel(i)} — £${(Number(i.price || 0) * Number(i.qty || 0)).toFixed(2)}`;
     return base;
   }).join('\n');
 }
@@ -498,10 +531,11 @@ async function saveOrderToSupabase(details) {
         postcode: details.postcode
       },
       items: cart.map(i => ({
+        id: i.id || null,
         name: i.name,
         qty: i.qty,
-        price_each: i.price,
-        line_total: i.price * i.qty,
+        price_each: Number(i.price || 0),
+        line_total: Number(i.price || 0) * Number(i.qty || 0),
         pen_heads: i.pen_heads || "",
         syringes: i.syringes || ""
       })),
@@ -524,14 +558,16 @@ async function saveOrderToSupabase(details) {
   }
 }
 
+// UPDATED: stock deduction by product ID (not name)
 async function deductStock(cartItems) {
   try {
-    const productNames = cartItems.map(item => item.name);
+    const ids = cartItems.map(i => i.id).filter(Boolean);
+    if (!ids.length) return;
 
     const { data: products, error: fetchError } = await supabaseClient
       .from('Products')
-      .select('id, name, stock')
-      .in('name', productNames);
+      .select('id, stock')
+      .in('id', ids);
 
     if (fetchError) {
       console.error('Error fetching products:', fetchError);
@@ -539,10 +575,10 @@ async function deductStock(cartItems) {
     }
 
     for (const cartItem of cartItems) {
-      const product = products.find(p => p.name === cartItem.name);
+      const product = (products || []).find(p => p.id === cartItem.id);
       if (!product) continue;
 
-      const newStock = Math.max(0, (product.stock || 0) - cartItem.qty);
+      const newStock = Math.max(0, (product.stock || 0) - Number(cartItem.qty || 0));
 
       const { error: updateError } = await supabaseClient
         .from('Products')
@@ -641,13 +677,17 @@ document.getElementById('addressForm').onsubmit = async function(e) {
     return;
   }
 
-  // NEW: block if mandatory dropdowns not selected
+  // block if mandatory dropdowns not selected
   const missing = validateAccessories();
   if (missing.length) {
     checkoutStatus.textContent = missing[0];
     checkoutStatus.classList.add('text-danger');
     return;
   }
+
+  // IMPORTANT: refresh prices right before totals + order save
+  await syncCartPricesFromSupabase();
+  renderOrderSummary();
 
   const bundle = calculateBundle(cart);
   total = bundle.finalTotal;
@@ -659,7 +699,7 @@ document.getElementById('addressForm').onsubmit = async function(e) {
   document.getElementById('payment-summary').innerHTML = cart.map(i => `
     <div class="d-flex justify-content-between">
       <span>${i.qty} × ${i.name}${extraLabel(i)}</span>
-      <span>£${(i.price*i.qty).toFixed(2)}</span>
+      <span>£${(Number(i.price || 0) * Number(i.qty || 0)).toFixed(2)}</span>
     </div>
   `).join('');
   document.getElementById('payment-total').textContent = `£${total.toFixed(2)}`;
@@ -688,7 +728,7 @@ document.getElementById('addressForm').onsubmit = async function(e) {
     // 1) Save order
     await saveOrderToSupabase(details);
 
-    // 2) Deduct stock
+    // 2) Deduct stock (by ID)
     await deductStock(cart);
 
     // 3) Save abandoned checkout
@@ -745,6 +785,9 @@ function backToShop() {
     syringes: i.syringes || ""
   }));
   saveCartToStorage();
+
+  // IMPORTANT: sync current prices from Supabase before rendering totals
+  await syncCartPricesFromSupabase();
 
   renderOrderSummary();
 })();
