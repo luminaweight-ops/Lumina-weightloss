@@ -13,6 +13,16 @@
     background: #f3f4f6;
   }
 
+  /* (Optional) Trust bar styling so it doesn't look naked */
+  #trust-bar{
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+    color:#fff;
+    font-size:.85rem;
+    font-weight:600;
+    padding:6px 0;
+  }
+  #trust-bar span{ white-space: nowrap; }
+
   .navbar { background: #020617; }
   .navbar-brand { color: #fff; font-weight: 700; }
   .navbar .nav-link { color: #e5e7eb; }
@@ -64,6 +74,13 @@
   .muted-line{
     color:#64748b;
     font-size:.85rem;
+  }
+
+  .mini-actions{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-top:10px;
   }
 </style>
 </head>
@@ -154,6 +171,7 @@
   function badge(status) {
     status = (status || "Pending").toLowerCase();
     if (status === "paid")      return `<span class="badge bg-success">PAID</span>`;
+    if (status === "packed")    return `<span class="badge bg-secondary">PACKED</span>`;
     if (status === "shipped")   return `<span class="badge bg-primary">SHIPPED</span>`;
     if (status === "cancelled") return `<span class="badge bg-danger">CANCELLED</span>`;
     return `<span class="badge bg-warning text-dark">PENDING</span>`;
@@ -198,6 +216,205 @@
         ${lines}
       </div>
     `;
+  }
+
+  // ---------- ADDRESS (NEW) ----------
+  function getCustomer(order){
+    return order?.details?.customer || {};
+  }
+
+  function buildAddressText(order){
+    const c = getCustomer(order);
+    const parts = [
+      c.name ? String(c.name).trim() : "",
+      c.address1 ? String(c.address1).trim() : "",
+      c.address2 ? String(c.address2).trim() : "",
+      c.city ? String(c.city).trim() : "",
+      c.postcode ? String(c.postcode).trim() : "",
+      c.phone ? `Phone: ${String(c.phone).trim()}` : ""
+    ].filter(Boolean);
+    return parts.join("\n");
+  }
+
+  function buildAddressHtml(order){
+    const c = getCustomer(order);
+    const hasAny = c && (c.address1 || c.city || c.postcode || c.name || c.phone || c.address2);
+    if(!hasAny){
+      return `
+        <div class="items-box" style="margin-top:8px;">
+          <strong>📍 Delivery address</strong>
+          <div class="muted-line">No address recorded.</div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="items-box" style="margin-top:8px;">
+        <strong>📍 Delivery address</strong>
+        ${c.name ? `${escapeHtml(c.name)}\n` : ""}
+        ${c.address1 ? `${escapeHtml(c.address1)}\n` : ""}
+        ${c.address2 ? `${escapeHtml(c.address2)}\n` : ""}
+        ${c.city ? `${escapeHtml(c.city)}\n` : ""}
+        ${c.postcode ? `${escapeHtml(c.postcode)}\n` : ""}
+        ${c.phone ? `📞 ${escapeHtml(c.phone)}` : ""}
+      </div>
+    `;
+  }
+
+  // tiny HTML escape to prevent any weird input breaking layout
+  function escapeHtml(str){
+    return String(str || "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  // ---------- COPY ADDRESS (NEW) ----------
+  async function copyAddressById(orderId){
+    const order = ordersCache[orderId];
+    if(!order) return alert("Order not found.");
+
+    const text = buildAddressText(order);
+    if(!text.trim()) return alert("No address found on this order.");
+
+    try{
+      await navigator.clipboard.writeText(text);
+      alert("Address copied ✅");
+    }catch(e){
+      // fallback
+      try{
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        alert("Address copied ✅");
+      }catch(err){
+        console.error("Copy failed", err);
+        alert("Copy failed — your browser blocked it.");
+      }
+    }
+  }
+
+  // ---------- PRINT PACKING SLIP (NEW) ----------
+  function printPackingSlipById(orderId){
+    const order = ordersCache[orderId];
+    if(!order) return alert("Order not found.");
+
+    const c = getCustomer(order);
+    const ref = order.reference || order.id;
+    const created = order.created_at ? new Date(order.created_at).toLocaleString() : "";
+    const status = order.status || "Pending";
+    const total = `£${Number(order.total_amount || 0).toFixed(2)}`;
+
+    const items = (order?.details?.items || []).map(i=>{
+      const lineTotal = Number(i.line_total || (i.price_each || 0) * i.qty);
+      return `
+        <tr>
+          <td style="padding:8px; border-bottom:1px solid #ddd;">${escapeHtml(i.qty)} × ${escapeHtml(i.name)}${escapeHtml(extrasLabel(i))}</td>
+          <td style="padding:8px; border-bottom:1px solid #ddd; text-align:right;">£${lineTotal.toFixed(2)}</td>
+        </tr>
+      `;
+    }).join("");
+
+    const w = window.open("", "_blank", "width=800,height=900");
+    if(!w) return alert("Popup blocked — allow popups then try again.");
+
+    w.document.open();
+    w.document.write(`
+      <!doctype html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Packing Slip ${escapeHtml(ref)}</title>
+        <style>
+          body{ font-family: system-ui, -apple-system, Segoe UI, sans-serif; padding:24px; color:#111; }
+          .top{ display:flex; justify-content:space-between; gap:16px; }
+          .box{ border:1px solid #ddd; border-radius:12px; padding:14px; }
+          h1{ margin:0 0 8px; font-size:20px; }
+          .muted{ color:#666; font-size:12px; margin-top:4px; }
+          table{ width:100%; border-collapse:collapse; margin-top:16px; }
+          .right{ text-align:right; }
+          .big{ font-size:18px; font-weight:800; }
+          @media print{
+            button{ display:none; }
+            body{ padding:0; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="top">
+          <div class="box" style="flex:1;">
+            <h1>Lumina Weight — Packing Slip</h1>
+            <div><strong>Order Ref:</strong> ${escapeHtml(ref)}</div>
+            <div><strong>Date:</strong> ${escapeHtml(created)}</div>
+            <div><strong>Status:</strong> ${escapeHtml(status)}</div>
+            <div class="muted">Internal use only</div>
+          </div>
+          <div class="box" style="flex:1;">
+            <div style="font-weight:800; margin-bottom:6px;">Ship to</div>
+            <div>${c.name ? escapeHtml(c.name) + "<br>" : ""}</div>
+            <div>${c.address1 ? escapeHtml(c.address1) + "<br>" : ""}</div>
+            <div>${c.address2 ? escapeHtml(c.address2) + "<br>" : ""}</div>
+            <div>${c.city ? escapeHtml(c.city) + "<br>" : ""}</div>
+            <div>${c.postcode ? escapeHtml(c.postcode) + "<br>" : ""}</div>
+            <div>${c.phone ? "📞 " + escapeHtml(c.phone) : ""}</div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th style="text-align:left; padding:8px; border-bottom:2px solid #111;">Items</th>
+              <th style="text-align:right; padding:8px; border-bottom:2px solid #111;">Line total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items || `<tr><td style="padding:8px;">No items recorded</td><td></td></tr>`}
+          </tbody>
+        </table>
+
+        <div style="display:flex; justify-content:flex-end; margin-top:14px;">
+          <div class="box" style="min-width:260px;">
+            <div class="right">Total</div>
+            <div class="right big">${escapeHtml(total)}</div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <button onclick="window.print()">Print</button>
+        </div>
+      </body>
+      </html>
+    `);
+    w.document.close();
+    w.focus();
+    w.print();
+  }
+
+  // ---------- MARK PACKED (NEW) ----------
+  async function markPackedById(orderId){
+    const order = ordersCache[orderId];
+    if(!order) return alert("Order not found.");
+
+    if(!confirm("Mark this order as PACKED?")) return;
+
+    const { error } = await supabaseClient
+      .from("Orders")
+      .update({ status: "Packed" })
+      .eq("id", orderId);
+
+    if(error){
+      console.error("Packed update failed", error);
+      alert("Packed update failed — check Supabase policy.");
+      return;
+    }
+
+    ordersCache[orderId].status = "Packed";
+    loadOrders();
   }
 
   // ---------- EMAIL: SHIPPED ----------
@@ -394,29 +611,49 @@
         "Customer";
       const total = Number(order.total_amount || 0).toFixed(2);
 
-      const isPaid = (status || "").toLowerCase() === "paid";
+      const statusLower = (status || "").toLowerCase();
+      const isPaid = statusLower === "paid";
 
       return `
         <div class="order-card">
           <div class="d-flex justify-content-between align-items-start">
             <div style="flex:1; padding-right:14px;">
-              <strong>${ref}</strong><br>
-              <small>${created}</small><br>
-              <small>${name} — ${email}</small>
+              <strong>${escapeHtml(ref)}</strong><br>
+              <small>${escapeHtml(created)}</small><br>
+              <small>${escapeHtml(name)} — ${escapeHtml(email)}</small>
+              ${buildAddressHtml(order)}
               ${buildItemsHtml(order)}
             </div>
 
-            <div class="text-end" style="min-width: 240px;">
+            <div class="text-end" style="min-width: 260px;">
               <div class="mb-1">${badge(status)}</div>
-              <div class="fw-bold">£${total}</div>
+              <div class="fw-bold">£${escapeHtml(total)}</div>
 
               <select class="form-select form-select-sm mt-2"
                 onchange="updateStatus('${order.id}', this.value)">
                 <option ${status === "Pending" ? "selected" : ""}>Pending</option>
                 <option ${status === "Paid" ? "selected" : ""}>Paid</option>
+                <option ${status === "Packed" ? "selected" : ""}>Packed</option>
                 <option ${status === "Shipped" ? "selected" : ""}>Shipped</option>
                 <option ${status === "Cancelled" ? "selected" : ""}>Cancelled</option>
               </select>
+
+              <div class="mini-actions">
+                <button class="btn btn-sm btn-outline-dark"
+                  onclick="copyAddressById('${order.id}')">
+                  📋 Copy address
+                </button>
+
+                <button class="btn btn-sm btn-outline-secondary"
+                  onclick="printPackingSlipById('${order.id}')">
+                  🖨️ Print slip
+                </button>
+
+                <button class="btn btn-sm btn-secondary"
+                  onclick="markPackedById('${order.id}')">
+                  ✅ Mark Packed
+                </button>
+              </div>
 
               <div class="btn-row">
                 <button class="btn btn-sm btn-success"
@@ -476,10 +713,10 @@
         <div class="review-card">
           <div class="d-flex justify-content-between">
             <div>
-              <strong>${name}</strong>
-              <div class="my-1">${stars}</div>
-              <p class="mb-1">${message}</p>
-              <small class="review-meta">${created}</small>
+              <strong>${escapeHtml(name)}</strong>
+              <div class="my-1">${escapeHtml(stars)}</div>
+              <p class="mb-1">${escapeHtml(message)}</p>
+              <small class="review-meta">${escapeHtml(created)}</small>
             </div>
             <div class="text-end" style="min-width: 140px;">
               <button class="btn btn-sm btn-success mb-1" onclick="publishReview('${review.id}')">✅ Publish</button>
@@ -558,6 +795,11 @@
   window.sendShippedEmailById = sendShippedEmailById;
   window.sendCancelledEmailById = sendCancelledEmailById;
   window.markPaidAndSendById = markPaidAndSendById;
+
+  window.copyAddressById = copyAddressById;
+  window.printPackingSlipById = printPackingSlipById;
+  window.markPackedById = markPackedById;
+
   window.publishReview = publishReview;
   window.deleteReview = deleteReview;
 
