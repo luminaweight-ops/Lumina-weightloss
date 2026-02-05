@@ -199,22 +199,62 @@ let cart = [];
 let total = 0;
 
 // ---------- ACCESSORY RULES ----------
-function isPenItem(name) {
-  return (name || '').toLowerCase().includes('pen');
+function isSemaglutide(name){
+  return (name || '').toLowerCase().includes('semaglutide') || (name || '').toLowerCase().includes('sema');
 }
-function isVialItem(name) {
-  return (name || '').toLowerCase().includes('vial');
+
+// We now allow "forced" form via item.sema_form when sema names don't include pen/vial
+function isPenItem(itemOrName) {
+  const item = (typeof itemOrName === 'object' && itemOrName) ? itemOrName : null;
+  const name = item ? (item.name || '') : (itemOrName || '');
+  const n = String(name).toLowerCase();
+
+  // explicit override (for sema selector)
+  const semaForm = item ? String(item.sema_form || '').toLowerCase().trim() : '';
+  if (semaForm === 'pen') return true;
+
+  // metadata-based (if you ever add these fields in cart)
+  const form = item ? String(item.form || item.type || item.format || item.variant || '').toLowerCase() : '';
+  if (form.includes('pen')) return true;
+
+  return n.includes('pen') || n.includes('flexpen') || n.includes('cartridge');
+}
+
+function isVialItem(itemOrName) {
+  const item = (typeof itemOrName === 'object' && itemOrName) ? itemOrName : null;
+  const name = item ? (item.name || '') : (itemOrName || '');
+  const n = String(name).toLowerCase();
+
+  // explicit override (for sema selector)
+  const semaForm = item ? String(item.sema_form || '').toLowerCase().trim() : '';
+  if (semaForm === 'vial') return true;
+
+  const form = item ? String(item.form || item.type || item.format || item.variant || '').toLowerCase() : '';
+  if (form.includes('vial')) return true;
+
+  return n.includes('vial');
 }
 
 function extraLabel(item) {
   const n = (item?.name || '').toLowerCase();
-  if (n.includes('pen') && item.pen_heads) return ` (Pen heads: ${item.pen_heads === 'none' ? 'None required' : item.pen_heads})`;
-  if (n.includes('vial') && item.syringes) return ` (Syringes: ${item.syringes === 'none' ? 'None required' : item.syringes})`;
+  if (isPenItem(item) && item.pen_heads) return ` (Pen heads: ${item.pen_heads === 'none' ? 'None required' : item.pen_heads})`;
+  if (isVialItem(item) && item.syringes) return ` (Syringes: ${item.syringes === 'none' ? 'None required' : item.syringes})`;
   return '';
 }
 
 function saveCartToStorage() {
   try { localStorage.setItem('cart', JSON.stringify(cart)); } catch (e) {}
+}
+
+// NEW: sema form selector setter
+function setSemaForm(index, value){
+  if (!cart[index]) return;
+  cart[index].sema_form = String(value || '').trim(); // 'pen' | 'vial' | ''
+  // clear opposite accessory if switching
+  if (cart[index].sema_form === 'pen') cart[index].syringes = "";
+  if (cart[index].sema_form === 'vial') cart[index].pen_heads = "";
+  saveCartToStorage();
+  renderOrderSummary();
 }
 
 // called by dropdowns
@@ -235,11 +275,23 @@ function validateAccessories() {
 
   cart.forEach((item) => {
     const n = (item?.name || '').toLowerCase();
+
+    // If SEMAGLUTIDE item doesn't clearly say pen/vial, force them to pick
+    const sema = isSemaglutide(n);
+    const clearlyPen  = isPenItem(item);
+    const clearlyVial = isVialItem(item);
+    const needsSemaChoice = sema && !clearlyPen && !clearlyVial;
+
+    if (needsSemaChoice && !String(item.sema_form || '').trim()) {
+      missing.push(`Select Semaglutide type for: ${item.name}`);
+      return;
+    }
+
     // must be chosen (including 'none')
-    if (n.includes('pen') && !String(item.pen_heads || '').trim()) {
+    if (isPenItem(item) && !String(item.pen_heads || '').trim()) {
       missing.push(`Select Pen heads for: ${item.name}`);
     }
-    if (n.includes('vial') && !String(item.syringes || '').trim()) {
+    if (isVialItem(item) && !String(item.syringes || '').trim()) {
       missing.push(`Select Syringes for: ${item.name}`);
     }
   });
@@ -298,10 +350,10 @@ function calculateBundle(cart) {
     totalQty += qty;
     baseTotal += line;
 
-    if (name.includes('vial')) {
+    if (name.includes('vial') || isVialItem(item)) {
       vialQty += qty;
       vialTotal += line;
-    } else if (name.includes('pen')) {
+    } else if (name.includes('pen') || isPenItem(item)) {
       penQty += qty;
       penTotal += line;
     } else {
@@ -422,8 +474,30 @@ async function maybeRecoverCart() {
 // Dropdown HTML (mandatory + includes None required)
 function accessoryDropdownHTML(item, index) {
   const name = item?.name || '';
+  const n = String(name).toLowerCase();
+  const sema = isSemaglutide(n);
 
-  if (isPenItem(name)) {
+  const penDetected = isPenItem(item);
+  const vialDetected = isVialItem(item);
+
+  // If it's sema but neither pen/vial is detectable from name/fields, force a choice
+  if (sema && !penDetected && !vialDetected) {
+    const currentForm = item.sema_form ? String(item.sema_form) : '';
+    return `
+      <div class="addon-row d-flex align-items-center justify-content-between">
+        <label class="m-0">Semaglutide type <span class="text-danger">*</span></label>
+        <select class="form-select form-select-sm" style="max-width: 220px;" required
+          onchange="setSemaForm(${index}, this.value)">
+          <option value="" ${currentForm === '' ? 'selected' : ''} disabled>Select…</option>
+          <option value="pen" ${currentForm === 'pen' ? 'selected' : ''}>Pen (needs pen heads)</option>
+          <option value="vial" ${currentForm === 'vial' ? 'selected' : ''}>Vial (needs syringes)</option>
+        </select>
+      </div>
+      ${currentForm ? accessoryDropdownHTML({ ...item, sema_form: currentForm }, index) : ''}
+    `;
+  }
+
+  if (isPenItem(item)) {
     const current = item.pen_heads ? String(item.pen_heads) : '';
     return `
       <div class="addon-row d-flex align-items-center justify-content-between">
@@ -439,7 +513,7 @@ function accessoryDropdownHTML(item, index) {
     `;
   }
 
-  if (isVialItem(name)) {
+  if (isVialItem(item)) {
     const current = item.syringes ? String(item.syringes) : '';
     return `
       <div class="addon-row d-flex align-items-center justify-content-between">
@@ -537,7 +611,8 @@ async function saveOrderToSupabase(details) {
         price_each: Number(i.price || 0),
         line_total: Number(i.price || 0) * Number(i.qty || 0),
         pen_heads: i.pen_heads || "",
-        syringes: i.syringes || ""
+        syringes: i.syringes || "",
+        sema_form: i.sema_form || ""   // NEW: saved for semaglutide items
       })),
       reference: details.ref
     };
@@ -782,7 +857,8 @@ function backToShop() {
   cart = cart.map(i => ({
     ...i,
     pen_heads: i.pen_heads || "",
-    syringes: i.syringes || ""
+    syringes: i.syringes || "",
+    sema_form: i.sema_form || ""   // NEW
   }));
   saveCartToStorage();
 
